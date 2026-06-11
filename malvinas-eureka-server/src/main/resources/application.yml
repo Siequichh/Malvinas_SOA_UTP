@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: malvinas-eureka-server
+  config:
+    import: optional:file:.env[.properties]
+  profiles:
+    active: ${ENVIRONMENT:dev}

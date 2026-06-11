@@ -1,0 +1,44 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+# In prod every service is Eureka-registered → use lb:// for all routes
+routes:
+  auth-uri: lb://auth-service
+  personal-uri: lb://personal-service
+  vehiculos-uri: lb://vehiculos-service
+  cargas-uri: lb://cargas-service
+  rutas-uri: lb://rutas-service
+  reportes-uri: lb://reportes-service
+
+server:
+  port: ${SERVER_PORT:8080}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI}/eureka
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+
+jwt:
+  secret: ${JWT_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.malvinas: INFO
+    org.springframework.cloud.gateway: WARN
+    org.springframework.boot.autoconfigure.security: ERROR

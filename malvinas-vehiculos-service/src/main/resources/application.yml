@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: vehiculos-service
+  config:
+    import: optional:file:.env[.properties]
+  profiles:
+    active: ${ENVIRONMENT:dev}

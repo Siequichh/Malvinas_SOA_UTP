@@ -1,0 +1,70 @@
+<div>
+  <p-toast />
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h2 class="text-2xl font-bold m-0">Control de Cargas</h2>
+    <p-button label="Nueva Carga" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <p-table [value]="loads()" [loading]="loading()" [paginator]="true" [rows]="15"
+           styleClass="p-datatable-sm">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>ID</th>
+        <th>Vehiculo</th>
+        <th>Planta</th>
+        <th>Estado</th>
+        <th>Inicio</th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-l>
+      <tr>
+        <td>#{{ l.id }}</td>
+        <td><strong>{{ l.vehiclePlate }}</strong></td>
+        <td>{{ l.loadingPlant }}</td>
+        <td>
+          <p-tag [value]="getStatusLabel(l.statusCode)" [severity]="getStatusSeverity(l.statusCode)" />
+        </td>
+        <td>{{ l.loadingStartTime | date:'dd/MM HH:mm' }}</td>
+        <td>
+          <p-button *ngIf="l.statusCode === '02'" icon="pi pi-check" severity="success"
+                    size="small" [rounded]="true" [text]="true" title="Completar carga"
+                    (onClick)="completeLoad(l)" />
+          <p-button *ngIf="l.statusCode === '01' || l.statusCode === '02'" icon="pi pi-times"
+                    severity="danger" size="small" [rounded]="true" [text]="true" title="Cancelar carga"
+                    (onClick)="cancelLoad(l)" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="6" class="text-center p-4">No hay registros de carga</td></tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Nueva Carga Dialog -->
+  <p-dialog [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)"
+            header="Iniciar Proceso de Carga" [modal]="true" [style]="{ width: '480px' }">
+    <div class="flex flex-column gap-3 p-3">
+      <div class="flex flex-column gap-2">
+        <label>Vehiculo Disponible *</label>
+        <p-select [options]="availableVehicles()" optionLabel="licensePlate" optionValue="licensePlate"
+                  [ngModel]="form().vehiclePlate" (ngModelChange)="updateForm('vehiclePlate', $event)"
+                  placeholder="Seleccionar vehiculo" styleClass="w-full" />
+      </div>
+      <div class="flex flex-column gap-2">
+        <label>Planta de Carga</label>
+        <input pInputText [ngModel]="form().loadingPlant"
+               (ngModelChange)="updateForm('loadingPlant', $event)" />
+      </div>
+      <div class="flex flex-column gap-2">
+        <label>Observaciones</label>
+        <textarea pTextarea [ngModel]="form().remarks"
+                  (ngModelChange)="updateForm('remarks', $event)" rows="3"></textarea>
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" severity="secondary" (onClick)="dialogVisible.set(false)" />
+      <p-button label="Iniciar Carga" icon="pi pi-play" (onClick)="saveLoad()" />
+    </ng-template>
+  </p-dialog>
+</div>

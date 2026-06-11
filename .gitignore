@@ -1,0 +1,27 @@
+# ── Credenciales y configuracion sensible ────────────────────────────────
+.env
+# Permitir solo el template (sin valores reales)
+!.env.example
+
+# ── Maven / Spring Boot ───────────────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ── IntelliJ IDEA ────────────────────────────────────────────────────────
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/shelf/
+*.iml
+!.idea/
+
+# ── Node / Angular ───────────────────────────────────────────────────────
+node_modules/
+dist/
+.angular/
+
+# ── OS ───────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

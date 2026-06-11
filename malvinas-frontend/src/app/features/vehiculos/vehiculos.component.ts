@@ -1,0 +1,106 @@
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { VehicleService } from '../../core/services/vehicle.service';
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+
+@Component({
+  selector: 'app-vehiculos',
+  standalone: true,
+  imports: [CommonModule, FormsModule, TableModule, ButtonModule, TagModule,
+    DialogModule, InputTextModule, SelectModule, ToastModule],
+  providers: [MessageService],
+  templateUrl: './vehiculos.component.html',
+  styleUrls: ['./vehiculos.component.scss']
+})
+export class VehiculosComponent implements OnInit {
+  vehicles = signal<any[]>([]);
+  vehicleTypes = signal<any[]>([]);
+  loading = signal(true);
+  dialogVisible = signal(false);
+  statusDialogVisible = signal(false);
+  editMode = signal(false);
+  selectedVehicle = signal<any>(null);
+
+  form = signal<any>({ licensePlate: '', vehicleTypeId: null, brand: '', model: '', year: null, color: '' });
+  statusForm = signal<any>({ newStatusCode: '', reason: '' });
+
+  readonly statusOptions = [
+    { label: 'Disponible', value: '01' },
+    { label: 'En Carga', value: '02' },
+    { label: 'Cargado', value: '03' },
+    { label: 'En Ruta', value: '04' },
+    { label: 'Mantenimiento', value: '05' }
+  ];
+
+  constructor(private vehicleService: VehicleService, private messageService: MessageService) {}
+
+  ngOnInit() {
+    this.loadVehicles();
+    this.vehicleService.getVehicleTypes().subscribe(t => this.vehicleTypes.set(t));
+  }
+
+  loadVehicles() {
+    this.loading.set(true);
+    this.vehicleService.getVehicles().subscribe({
+      next: (v) => { this.vehicles.set(v); this.loading.set(false); },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  getStatusSeverity(code: string): string {
+    const map: Record<string, string> = { '01': 'success', '02': 'warning', '03': 'info', '04': 'primary', '05': 'danger' };
+    return map[code] || 'secondary';
+  }
+
+  openCreate() {
+    this.form.set({ licensePlate: '', vehicleTypeId: null, brand: '', model: '', year: null, color: '' });
+    this.editMode.set(false);
+    this.dialogVisible.set(true);
+  }
+
+  openEdit(vehicle: any) {
+    this.selectedVehicle.set(vehicle);
+    this.form.set({ ...vehicle, vehicleTypeId: vehicle.vehicleTypeId });
+    this.editMode.set(true);
+    this.dialogVisible.set(true);
+  }
+
+  openStatusChange(vehicle: any) {
+    this.selectedVehicle.set(vehicle);
+    this.statusForm.set({ newStatusCode: '', reason: '' });
+    this.statusDialogVisible.set(true);
+  }
+
+  saveVehicle() {
+    const obs = this.editMode()
+      ? this.vehicleService.updateVehicle(this.selectedVehicle().licensePlate, this.form())
+      : this.vehicleService.createVehicle(this.form());
+    obs.subscribe({
+      next: () => { this.dialogVisible.set(false); this.loadVehicles(); this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Vehiculo guardado' }); },
+      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: e.error?.message || 'Error al guardar' })
+    });
+  }
+
+  changeStatus() {
+    this.vehicleService.changeStatus(this.selectedVehicle().licensePlate, this.statusForm()).subscribe({
+      next: () => { this.statusDialogVisible.set(false); this.loadVehicles(); this.messageService.add({ severity: 'success', summary: 'Estado actualizado', detail: '' }); },
+      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: e.error?.message || 'Error al cambiar estado' })
+    });
+  }
+
+  updateStatusForm(field: string, value: any) {
+    this.statusForm.update(f => ({ ...f, [field]: value }));
+  }
+
+  updateForm(field: string, value: any) {
+    this.form.update(f => ({ ...f, [field]: value }));
+  }
+}

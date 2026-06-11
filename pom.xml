@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        Reactor POM raiz - Solo agrega modulos para construir/importar juntos.
+        Cada modulo mantiene spring-boot-starter-parent como su propio padre.
+        En IntelliJ: abrir este pom.xml como proyecto Maven para que reconozca
+        todos los source roots automaticamente.
+    -->
+    <groupId>com.malvinas</groupId>
+    <artifactId>malvinas-soa</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Malvinas SOA - Sistema de Control de Carga y Despacho Vehicular</name>
+    <description>Reactor POM que agrupa todos los microservicios del sistema Malvinas SOA</description>
+
+    <modules>
+        <module>malvinas-eureka-server</module>
+        <module>malvinas-api-gateway</module>
+        <module>malvinas-personal-service</module>
+        <module>malvinas-auth-service</module>
+        <module>malvinas-vehiculos-service</module>
+        <module>malvinas-cargas-service</module>
+        <module>malvinas-rutas-service</module>
+        <module>malvinas-reportes-service</module>
+    </modules>
+
+</project>

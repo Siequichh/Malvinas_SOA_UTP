@@ -1,0 +1,221 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+// ────────────────────────────────────────────────────────────
+// Page layout
+// ────────────────────────────────────────────────────────────
+.login-page {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: #0d1117;
+}
+
+// ────────────────────────────────────────────────────────────
+// Brand panel (left 55%)
+// ────────────────────────────────────────────────────────────
+.brand-panel {
+  position: relative;
+  flex: 0 0 55%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem 3.5rem;
+  background: linear-gradient(145deg, #0a1628 0%, #0c1f35 55%, #091929 100%);
+  overflow: hidden;
+}
+
+// Decorative blobs
+.brand-decor {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.brand-decor--1 {
+  width: 560px;
+  height: 560px;
+  top: -200px;
+  right: -180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+}
+.brand-decor--2 {
+  width: 320px;
+  height: 320px;
+  bottom: -100px;
+  left: -60px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+}
+.brand-decor--3 {
+  width: 200px;
+  height: 200px;
+  bottom: 30%;
+  right: 10%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%);
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+  padding-top: 2rem;
+}
+
+.brand-logo-wrap {
+  width: 68px;
+  height: 68px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+
+  .pi {
+    font-size: 1.9rem;
+    color: #10b981;
+  }
+}
+
+.brand-name {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.brand-tagline {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0 0 2.75rem;
+  line-height: 1.7;
+  max-width: 380px;
+}
+
+.brand-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    color: #94a3b8;
+    font-size: 0.9rem;
+
+    .pi {
+      color: #10b981;
+      font-size: 1.05rem;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.brand-footer {
+  position: relative;
+  z-index: 1;
+  font-size: 0.78rem;
+  color: #334155;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+// ────────────────────────────────────────────────────────────
+// Form panel (right 45%)
+// ────────────────────────────────────────────────────────────
+.form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #111827;
+}
+
+.form-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+// Mobile-only logo (hidden on desktop)
+.form-logo-mobile {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  color: #10b981;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+
+  .pi {
+    font-size: 1.6rem;
+  }
+}
+
+.form-header {
+  margin-bottom: 2.25rem;
+
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.3px;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+}
+
+.form-help {
+  margin: 1.75rem 0 0;
+  font-size: 0.78rem;
+  color: #374151;
+  text-align: center;
+  line-height: 1.5;
+}
+
+// ────────────────────────────────────────────────────────────
+// Responsive — hide brand panel on small screens
+// ────────────────────────────────────────────────────────────
+@media (max-width: 900px) {
+  .brand-panel {
+    display: none;
+  }
+
+  .form-logo-mobile {
+    display: flex;
+  }
+}

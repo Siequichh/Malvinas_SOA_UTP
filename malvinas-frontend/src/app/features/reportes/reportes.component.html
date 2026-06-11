@@ -1,0 +1,20 @@
+<div>
+  <h2 class="text-2xl font-bold mb-4">Reportes y Analytics</h2>
+  <div class="grid">
+    @for (kpi of kpis(); track kpi.name) {
+      <div class="col-12 md:col-4 lg:col-2">
+        <div class="card text-center">
+          <p class="text-surface-500 text-sm mb-1">{{ kpi.name }}</p>
+          <p class="text-2xl font-bold text-primary m-0">{{ kpi.value }}</p>
+          <p class="text-xs text-surface-400 mt-1">{{ kpi.unit }}</p>
+        </div>
+      </div>
+    }
+  </div>
+  @if (fleetReport()) {
+    <p-card header="Reporte de Flota" styleClass="mt-4">
+      <p>Total vehiculos: <strong>{{ fleetReport().totalVehicles }}</strong></p>
+      <p>Utilizacion: <strong>{{ fleetReport().utilizationPercent?.toFixed(1) }}%</strong></p>
+    </p-card>
+  }
+</div>
