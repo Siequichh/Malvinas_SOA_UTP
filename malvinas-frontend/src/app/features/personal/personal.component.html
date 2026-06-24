@@ -86,7 +86,7 @@
     </div>
     <ng-template pTemplate="footer">
       <p-button label="Cancelar" severity="secondary" (onClick)="dialogVisible.set(false)" />
-      <p-button label="Guardar" (onClick)="saveEmployee()" />
+      <p-button label="Guardar" [loading]="submitting()" [disabled]="submitting()" (onClick)="saveEmployee()" />
     </ng-template>
   </p-dialog>
 </div>

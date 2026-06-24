@@ -45,10 +45,10 @@
           @if (userRole() !== 'SEC') {
             <p-button *ngIf="d.statusCode === '01'" icon="pi pi-send" severity="warn"
                       size="small" [rounded]="true" [text]="true" title="Registrar salida"
-                      (onClick)="confirmDeparture(d)" />
+                      [disabled]="submitting()" (onClick)="confirmDeparture(d)" />
             <p-button *ngIf="d.statusCode === '02'" icon="pi pi-home" severity="success"
                       size="small" [rounded]="true" [text]="true" title="Cerrar ruta"
-                      (onClick)="confirmComplete(d)" />
+                      [disabled]="submitting()" (onClick)="confirmComplete(d)" />
           }
         </td>
       </tr>
@@ -99,7 +99,7 @@
     </div>
     <ng-template pTemplate="footer">
       <p-button label="Cancelar" severity="secondary" (onClick)="dialogVisible.set(false)" />
-      <p-button label="Programar" icon="pi pi-calendar" (onClick)="saveDispatch()" />
+      <p-button label="Programar" icon="pi pi-calendar" [loading]="submitting()" [disabled]="submitting()" (onClick)="saveDispatch()" />
     </ng-template>
   </p-dialog>
 </div>

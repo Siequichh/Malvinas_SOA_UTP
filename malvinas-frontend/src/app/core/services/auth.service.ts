@@ -37,11 +37,6 @@ export class AuthService {
         store.setItem(this.TOKEN_KEY,   response.accessToken);
         store.setItem(this.REFRESH_KEY, response.refreshToken);
         store.setItem(this.USER_KEY,    JSON.stringify(response.employee));
-        if (remember) {
-          localStorage.setItem(this.DNI_KEY, dni);
-        } else {
-          localStorage.removeItem(this.DNI_KEY);
-        }
         this._currentUser.set(response.employee);
       })
     );

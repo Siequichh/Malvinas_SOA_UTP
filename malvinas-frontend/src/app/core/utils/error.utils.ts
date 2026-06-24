@@ -7,7 +7,7 @@ export function parseLoginError(err: any): string {
 
 export function parseApiError(err: any): string {
   const status = err?.status;
-  if (status === 400) return err?.error?.message || 'Datos inválidos. Revisa el formulario.';
+  if (status === 400) return 'Completa todos los campos requeridos.';
   if (status === 401 || status === 403) return 'No tienes permiso para realizar esta acción.';
   if (status === 404) return 'El recurso solicitado no existe.';
   if (status === 409) return err?.error?.message || 'Conflicto: el registro ya existe.';

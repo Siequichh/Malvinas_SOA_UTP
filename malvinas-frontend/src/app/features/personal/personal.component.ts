@@ -30,6 +30,7 @@ export class PersonalComponent implements OnInit {
   roles = signal<any[]>([]);
   loading = signal(true);
   dialogVisible = signal(false);
+  submitting = signal(false);
   editMode = signal(false);
   selectedEmployee = signal<any>(null);
   form = signal<any>({ dni: '', firstName: '', lastName: '', email: '', phone: '', roleId: null, password: '' });
@@ -63,12 +64,26 @@ export class PersonalComponent implements OnInit {
   }
 
   saveEmployee() {
+    const f = this.form();
+    if (!f.dni || !f.firstName || !f.lastName || !f.roleId) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Completa DNI, nombre, apellido y rol.' });
+      return;
+    }
+    this.submitting.set(true);
     const obs = this.editMode()
-      ? this.employeeService.updateEmployee(this.selectedEmployee().id, this.form())
-      : this.employeeService.createEmployee(this.form());
+      ? this.employeeService.updateEmployee(this.selectedEmployee().id, f)
+      : this.employeeService.createEmployee(f);
     obs.subscribe({
-      next: () => { this.dialogVisible.set(false); this.loadEmployees(); this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Empleado guardado' }); },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      next: () => {
+        this.submitting.set(false);
+        this.dialogVisible.set(false);
+        this.loadEmployees();
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Empleado guardado' });
+      },
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 

@@ -87,7 +87,7 @@
     </div>
     <ng-template pTemplate="footer">
       <p-button label="Cancelar" severity="secondary" (onClick)="dialogVisible.set(false)" />
-      <p-button label="Guardar" (onClick)="saveVehicle()" />
+      <p-button label="Guardar" [loading]="submitting()" [disabled]="submitting()" (onClick)="saveVehicle()" />
     </ng-template>
   </p-dialog>
 
@@ -110,7 +110,7 @@
     </div>
     <ng-template pTemplate="footer">
       <p-button label="Cancelar" severity="secondary" (onClick)="statusDialogVisible.set(false)" />
-      <p-button label="Cambiar" severity="warn" (onClick)="changeStatus()" />
+      <p-button label="Cambiar" severity="warn" [loading]="submitting()" [disabled]="submitting()" (onClick)="changeStatus()" />
     </ng-template>
   </p-dialog>
 </div>

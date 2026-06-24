@@ -44,6 +44,7 @@ export class RutasComponent implements OnInit, OnDestroy {
   drivers = signal<any[]>([]);
   loading = signal(true);
   dialogVisible = signal(false);
+  submitting = signal(false);
   form = signal<any>({ vehiclePlate: '', driverId: null, scheduledDepartureTime: '', remarks: '', deliveryPointIds: [] });
   departureTime = signal<Date | null>(null);
 
@@ -160,33 +161,53 @@ export class RutasComponent implements OnInit, OnDestroy {
   }
 
   saveDispatch() {
-    this.dispatchService.createDispatch(this.form()).subscribe({
+    const f = this.form();
+    if (!f.vehiclePlate || !f.driverId) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Ingresa la placa del vehículo y selecciona un conductor.' });
+      return;
+    }
+    this.submitting.set(true);
+    this.dispatchService.createDispatch(f).subscribe({
       next: () => {
+        this.submitting.set(false);
         this.dialogVisible.set(false);
         this.loadDispatches();
         this.messageService.add({ severity: 'success', summary: 'Despacho creado', detail: 'Despacho programado correctamente' });
       },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 
   private registerDeparture(dispatch: any) {
+    this.submitting.set(true);
     this.dispatchService.registerDeparture(dispatch.id).subscribe({
       next: (d) => {
+        this.submitting.set(false);
         this.loadDispatches();
         this.messageService.add({ severity: 'success', summary: 'Salida registrada', detail: `Orden de Carga: ${d.loadingOrderCode}` });
       },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 
   private completeDispatch(dispatch: any) {
+    this.submitting.set(true);
     this.dispatchService.completeDispatch(dispatch.id).subscribe({
       next: () => {
+        this.submitting.set(false);
         this.loadDispatches();
         this.messageService.add({ severity: 'success', summary: 'Ruta cerrada', detail: 'Vehículo retornado a base' });
       },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 

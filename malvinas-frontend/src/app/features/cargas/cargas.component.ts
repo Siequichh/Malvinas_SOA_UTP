@@ -40,6 +40,7 @@ export class CargasComponent implements OnInit, OnDestroy {
   mobilizers = signal<any[]>([]);
   loading = signal(true);
   dialogVisible = signal(false);
+  submitting = signal(false);
   form = signal<any>({ vehiclePlate: '', mobilizerId: null, loadingPlant: 'Babel - Huachipa', remarks: '' });
 
   readonly statusOptions = [
@@ -100,13 +101,23 @@ export class CargasComponent implements OnInit, OnDestroy {
   }
 
   saveLoad() {
-    this.loadService.createLoad(this.form()).subscribe({
+    const f = this.form();
+    if (!f.vehiclePlate || !f.mobilizerId) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Selecciona vehículo y movilizador.' });
+      return;
+    }
+    this.submitting.set(true);
+    this.loadService.createLoad(f).subscribe({
       next: () => {
+        this.submitting.set(false);
         this.dialogVisible.set(false);
         this.loadLoads();
         this.messageService.add({ severity: 'success', summary: 'Carga iniciada', detail: 'Proceso de carga registrado' });
       },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 
@@ -137,22 +148,32 @@ export class CargasComponent implements OnInit, OnDestroy {
   }
 
   private doCompleteLoad(load: any) {
+    this.submitting.set(true);
     this.loadService.completeLoad(load.id).subscribe({
       next: () => {
+        this.submitting.set(false);
         this.loadLoads();
         this.messageService.add({ severity: 'success', summary: 'Completado', detail: 'Carga completada. Vehículo listo para despacho.' });
       },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 
   private doCancelLoad(load: any) {
+    this.submitting.set(true);
     this.loadService.cancelLoad(load.id).subscribe({
       next: () => {
+        this.submitting.set(false);
         this.loadLoads();
         this.messageService.add({ severity: 'warn', summary: 'Cancelado', detail: 'Carga cancelada. Vehículo disponible.' });
       },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 

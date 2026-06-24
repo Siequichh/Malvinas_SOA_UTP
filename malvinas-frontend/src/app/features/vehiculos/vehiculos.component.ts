@@ -31,6 +31,7 @@ export class VehiculosComponent implements OnInit {
   loading = signal(true);
   dialogVisible = signal(false);
   statusDialogVisible = signal(false);
+  submitting = signal(false);
   editMode = signal(false);
   selectedVehicle = signal<any>(null);
 
@@ -87,19 +88,46 @@ export class VehiculosComponent implements OnInit {
   }
 
   saveVehicle() {
+    const f = this.form();
+    if (!f.licensePlate || !f.vehicleTypeId) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Ingresa la placa y selecciona el tipo de vehículo.' });
+      return;
+    }
+    this.submitting.set(true);
     const obs = this.editMode()
-      ? this.vehicleService.updateVehicle(this.selectedVehicle().licensePlate, this.form())
-      : this.vehicleService.createVehicle(this.form());
+      ? this.vehicleService.updateVehicle(this.selectedVehicle().licensePlate, f)
+      : this.vehicleService.createVehicle(f);
     obs.subscribe({
-      next: () => { this.dialogVisible.set(false); this.loadVehicles(); this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Vehiculo guardado' }); },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      next: () => {
+        this.submitting.set(false);
+        this.dialogVisible.set(false);
+        this.loadVehicles();
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Vehículo guardado' });
+      },
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 
   changeStatus() {
+    if (!this.statusForm().newStatusCode) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Selecciona el nuevo estado.' });
+      return;
+    }
+    this.submitting.set(true);
     this.vehicleService.changeStatus(this.selectedVehicle().licensePlate, this.statusForm()).subscribe({
-      next: () => { this.statusDialogVisible.set(false); this.loadVehicles(); this.messageService.add({ severity: 'success', summary: 'Estado actualizado', detail: '' }); },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
+      next: () => {
+        this.submitting.set(false);
+        this.statusDialogVisible.set(false);
+        this.loadVehicles();
+        this.messageService.add({ severity: 'success', summary: 'Estado actualizado', detail: '' });
+      },
+      error: (e) => {
+        this.submitting.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+      }
     });
   }
 

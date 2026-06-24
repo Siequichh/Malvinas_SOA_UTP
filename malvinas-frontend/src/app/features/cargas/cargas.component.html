@@ -43,10 +43,10 @@
           @if (['ADM','SUP','MOV'].includes(userRole())) {
             <p-button *ngIf="l.statusCode === '02'" icon="pi pi-check" severity="success"
                       size="small" [rounded]="true" [text]="true" title="Completar carga"
-                      (onClick)="confirmComplete(l)" />
+                      [disabled]="submitting()" (onClick)="confirmComplete(l)" />
             <p-button *ngIf="l.statusCode === '01' || l.statusCode === '02'" icon="pi pi-times"
                       severity="danger" size="small" [rounded]="true" [text]="true" title="Cancelar carga"
-                      (onClick)="confirmCancel(l)" />
+                      [disabled]="submitting()" (onClick)="confirmCancel(l)" />
           }
         </td>
       </tr>
@@ -86,7 +86,7 @@
     </div>
     <ng-template pTemplate="footer">
       <p-button label="Cancelar" severity="secondary" (onClick)="dialogVisible.set(false)" />
-      <p-button label="Iniciar Carga" icon="pi pi-play" (onClick)="saveLoad()" />
+      <p-button label="Iniciar Carga" icon="pi pi-play" [loading]="submitting()" [disabled]="submitting()" (onClick)="saveLoad()" />
     </ng-template>
   </p-dialog>
 </div>
