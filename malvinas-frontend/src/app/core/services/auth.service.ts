@@ -19,9 +19,9 @@ export interface LoginResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly TOKEN_KEY = 'access_token';
+  private readonly TOKEN_KEY   = 'access_token';
   private readonly REFRESH_KEY = 'refresh_token';
-  private readonly USER_KEY = 'current_user';
+  private readonly USER_KEY    = 'current_user';
 
   private _currentUser = signal<LoginResponse['employee'] | null>(this.loadUser());
   readonly currentUser = this._currentUser.asReadonly();
@@ -30,31 +30,39 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  login(dni: string, password: string) {
+  login(dni: string, password: string, remember: boolean) {
     return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/login`, { dni, password }).pipe(
       tap(response => {
-        localStorage.setItem(this.TOKEN_KEY, response.accessToken);
-        localStorage.setItem(this.REFRESH_KEY, response.refreshToken);
-        localStorage.setItem(this.USER_KEY, JSON.stringify(response.employee));
+        const store = remember ? localStorage : sessionStorage;
+        store.setItem(this.TOKEN_KEY,   response.accessToken);
+        store.setItem(this.REFRESH_KEY, response.refreshToken);
+        store.setItem(this.USER_KEY,    JSON.stringify(response.employee));
+        if (remember) {
+          localStorage.setItem(this.DNI_KEY, dni);
+        } else {
+          localStorage.removeItem(this.DNI_KEY);
+        }
         this._currentUser.set(response.employee);
       })
     );
   }
 
   logout() {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_KEY);
-    localStorage.removeItem(this.USER_KEY);
+    [localStorage, sessionStorage].forEach(s => {
+      s.removeItem(this.TOKEN_KEY);
+      s.removeItem(this.REFRESH_KEY);
+      s.removeItem(this.USER_KEY);
+    });
     this._currentUser.set(null);
     this.router.navigate(['/login']);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return localStorage.getItem(this.TOKEN_KEY) ?? sessionStorage.getItem(this.TOKEN_KEY);
   }
 
   private loadUser(): LoginResponse['employee'] | null {
-    const data = localStorage.getItem(this.USER_KEY);
+    const data = localStorage.getItem(this.USER_KEY) ?? sessionStorage.getItem(this.USER_KEY);
     return data ? JSON.parse(data) : null;
   }
 }
