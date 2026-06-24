@@ -62,10 +62,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: EUREKA_URI
-        fromService:
-          type: web
-          name: malvinas-eureka
-          property: hostURL
+        value: https://malvinas-eureka.onrender.com
       - key: JWT_SECRET
         sync: false  # establecer manualmente en el dashboard de Render
       - key: POSTGRESQL_HOST
@@ -102,10 +99,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: EUREKA_URI
-        fromService:
-          type: web
-          name: malvinas-eureka
-          property: hostURL
+        value: https://malvinas-eureka.onrender.com
       - key: JWT_SECRET
         sync: false  # MISMO valor que personal-service y api-gateway
 
@@ -128,10 +122,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: EUREKA_URI
-        fromService:
-          type: web
-          name: malvinas-eureka
-          property: hostURL
+        value: https://malvinas-eureka.onrender.com
       - key: JWT_SECRET
         sync: false  # MISMO valor que personal-service y auth-service
 
@@ -152,10 +143,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: EUREKA_URI
-        fromService:
-          type: web
-          name: malvinas-eureka
-          property: hostURL
+        value: https://malvinas-eureka.onrender.com
       - key: POSTGRESQL_HOST
         fromDatabase:
           name: malvinas-db
@@ -190,10 +178,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: EUREKA_URI
-        fromService:
-          type: web
-          name: malvinas-eureka
-          property: hostURL
+        value: https://malvinas-eureka.onrender.com
       - key: POSTGRESQL_HOST
         fromDatabase:
           name: malvinas-db
@@ -228,10 +213,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: EUREKA_URI
-        fromService:
-          type: web
-          name: malvinas-eureka
-          property: hostURL
+        value: https://malvinas-eureka.onrender.com
       - key: POSTGRESQL_HOST
         fromDatabase:
           name: malvinas-db
@@ -266,10 +248,7 @@ services:
       - key: SERVER_PORT
         value: 10000
       - key: EUREKA_URI
-        fromService:
-          type: web
-          name: malvinas-eureka
-          property: hostURL
+        value: https://malvinas-eureka.onrender.com
 
   # ---------------------------------------------------------------------------
   # 9. Frontend Angular — Static Site
