@@ -25,14 +25,14 @@ public class AggregatorClient {
     private final RestClient rutasClient;
 
     public AggregatorClient(
-            @Value("${routes.vehiculos-uri:http://localhost:8082}") String vehiculosUri,
-            @Value("${routes.cargas-uri:http://localhost:8083}") String cargasUri,
-            @Value("${routes.rutas-uri:http://localhost:8084}") String rutasUri) {
+            @org.springframework.beans.factory.annotation.Qualifier("lbBuilder") RestClient.Builder lbBuilder,
+            @Value("${routes.vehiculos-uri:http://vehiculos-service}") String vehiculosUri,
+            @Value("${routes.cargas-uri:http://cargas-service}") String cargasUri,
+            @Value("${routes.rutas-uri:http://rutas-service}") String rutasUri) {
 
-        RestClient base = RestClient.builder().requestInterceptor(authInterceptor()).build();
-        this.vehiculosClient = base.mutate().baseUrl(vehiculosUri).build();
-        this.cargasClient    = base.mutate().baseUrl(cargasUri).build();
-        this.rutasClient     = base.mutate().baseUrl(rutasUri).build();
+        this.vehiculosClient = lbBuilder.clone().requestInterceptor(authInterceptor()).baseUrl(vehiculosUri).build();
+        this.cargasClient    = lbBuilder.clone().requestInterceptor(authInterceptor()).baseUrl(cargasUri).build();
+        this.rutasClient     = lbBuilder.clone().requestInterceptor(authInterceptor()).baseUrl(rutasUri).build();
     }
 
     // ponytail: propagate gateway-injected headers so downstream services can authenticate
