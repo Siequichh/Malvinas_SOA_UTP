@@ -8,126 +8,71 @@ import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
 import static org.springframework.cloud.gateway.server.mvc.filter.BeforeFilterFunctions.uri;
+import static org.springframework.cloud.gateway.server.mvc.filter.LoadBalancerFilterFunctions.lb;
 import static org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions.route;
 import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions.http;
 
-/**
- * Routes for Spring Cloud Gateway Server MVC (5.0.x).
- *
- * Correct pattern per official docs:
- *   route(id).route(predicate, http()).before(uri("target")).build()
- *
- * BeforeFilterFunctions.uri() sets MvcUtils.GATEWAY_REQUEST_URL_ATTR on the request
- * so that HandlerFunctions.http() (LookupProxyExchangeHandlerFunction) can resolve
- * the target URI at proxy time.
- */
 @Configuration
 public class GatewayRoutesConfig {
 
-    // Override these in application-dev.yml or env vars for prod (use lb://service-name)
     @Value("${routes.auth-uri:http://localhost:8086}")
     private String authUri;
 
-    @Value("${routes.personal-uri:lb://personal-service}")
+    @Value("${routes.personal-uri:http://localhost:8081}")
     private String personalUri;
 
-    @Value("${routes.vehiculos-uri:lb://vehiculos-service}")
+    @Value("${routes.vehiculos-uri:http://localhost:8082}")
     private String vehiculosUri;
 
-    @Value("${routes.cargas-uri:lb://cargas-service}")
+    @Value("${routes.cargas-uri:http://localhost:8083}")
     private String cargasUri;
 
-    @Value("${routes.rutas-uri:lb://rutas-service}")
+    @Value("${routes.rutas-uri:http://localhost:8084}")
     private String rutasUri;
 
-    @Value("${routes.reportes-uri:lb://reportes-service}")
+    @Value("${routes.reportes-uri:http://localhost:8085}")
     private String reportesUri;
 
-    @Bean
-    public RouterFunction<ServerResponse> authRoutes() {
-        return route("auth-service")
-                .route(RequestPredicates.path("/api/auth/**"), http())
-                .before(uri(authUri))
-                .build();
+    // lb:// URIs need LoadBalancerFilterFunctions.lb(); direct URIs use BeforeFilterFunctions.uri()
+    private RouterFunction<ServerResponse> proxy(String id, String pattern, String targetUri) {
+        var builder = route(id).route(RequestPredicates.path(pattern), http());
+        if (targetUri.startsWith("lb://")) {
+            return builder.filter(lb(targetUri.substring(5))).build();
+        }
+        return builder.before(uri(targetUri)).build();
     }
 
-    @Bean
-    public RouterFunction<ServerResponse> personalEmployeesRoutes() {
-        return route("personal-employees")
-                .route(RequestPredicates.path("/api/employees/**"), http())
-                .before(uri(personalUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> authRoutes() {
+        return proxy("auth-service", "/api/auth/**", authUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> personalRolesRoutes() {
-        return route("personal-roles")
-                .route(RequestPredicates.path("/api/roles/**"), http())
-                .before(uri(personalUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> personalEmployeesRoutes() {
+        return proxy("personal-employees", "/api/employees/**", personalUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> personalAttendancesRoutes() {
-        return route("personal-attendances")
-                .route(RequestPredicates.path("/api/attendances/**"), http())
-                .before(uri(personalUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> personalRolesRoutes() {
+        return proxy("personal-roles", "/api/roles/**", personalUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> vehiculosVehiclesRoutes() {
-        return route("vehiculos-vehicles")
-                .route(RequestPredicates.path("/api/vehicles/**"), http())
-                .before(uri(vehiculosUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> personalAttendancesRoutes() {
+        return proxy("personal-attendances", "/api/attendances/**", personalUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> vehiculosTypesRoutes() {
-        return route("vehiculos-types")
-                .route(RequestPredicates.path("/api/vehicle-types/**"), http())
-                .before(uri(vehiculosUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> vehiculosVehiclesRoutes() {
+        return proxy("vehiculos-vehicles", "/api/vehicles/**", vehiculosUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> cargasRoutes() {
-        return route("cargas-service")
-                .route(RequestPredicates.path("/api/loads/**"), http())
-                .before(uri(cargasUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> vehiculosTypesRoutes() {
+        return proxy("vehiculos-types", "/api/vehicle-types/**", vehiculosUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> rutasDispatchesRoutes() {
-        return route("rutas-dispatches")
-                .route(RequestPredicates.path("/api/dispatches/**"), http())
-                .before(uri(rutasUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> cargasRoutes() {
+        return proxy("cargas-service", "/api/loads/**", cargasUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> rutasPointsRoutes() {
-        return route("rutas-points")
-                .route(RequestPredicates.path("/api/delivery-points/**"), http())
-                .before(uri(rutasUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> rutasDispatchesRoutes() {
+        return proxy("rutas-dispatches", "/api/dispatches/**", rutasUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> reportesReportsRoutes() {
-        return route("reportes-reports")
-                .route(RequestPredicates.path("/api/reports/**"), http())
-                .before(uri(reportesUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> rutasPointsRoutes() {
+        return proxy("rutas-points", "/api/delivery-points/**", rutasUri);
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> reportesKpisRoutes() {
-        return route("reportes-kpis")
-                .route(RequestPredicates.path("/api/kpis/**"), http())
-                .before(uri(reportesUri))
-                .build();
+    @Bean public RouterFunction<ServerResponse> reportesReportsRoutes() {
+        return proxy("reportes-reports", "/api/reports/**", reportesUri);
+    }
+    @Bean public RouterFunction<ServerResponse> reportesKpisRoutes() {
+        return proxy("reportes-kpis", "/api/kpis/**", reportesUri);
     }
 }
