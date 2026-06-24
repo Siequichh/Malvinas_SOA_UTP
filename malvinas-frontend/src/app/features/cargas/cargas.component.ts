@@ -1,8 +1,11 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoadService } from '../../core/services/load.service';
+import { AuthService } from '../../core/services/auth.service';
+import { parseApiError } from '../../core/utils/error.utils';
 import { VehicleService } from '../../core/services/vehicle.service';
+import { EmployeeService } from '../../core/services/employee.service';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -11,20 +14,30 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { TextareaModule } from 'primeng/textarea';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { MessageService, ConfirmationService } from 'primeng/api';
+
+const LOAD_PRIORITY: Record<string, number> = { '02': 0, '01': 1, '03': 2, '04': 3 };
 
 @Component({
   selector: 'app-cargas',
   standalone: true,
   imports: [CommonModule, FormsModule, TableModule, ButtonModule, TagModule,
-    DialogModule, InputTextModule, SelectModule, ToastModule, TextareaModule],
-  providers: [MessageService],
+    DialogModule, InputTextModule, SelectModule, ToastModule, TextareaModule,
+    ConfirmDialogModule, IconFieldModule, InputIconModule],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './cargas.component.html',
   styleUrls: ['./cargas.component.scss']
 })
-export class CargasComponent implements OnInit {
+export class CargasComponent implements OnInit, OnDestroy {
+  readonly userRole = inject(AuthService).userRole;
+
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
   loads = signal<any[]>([]);
   availableVehicles = signal<any[]>([]);
+  mobilizers = signal<any[]>([]);
   loading = signal(true);
   dialogVisible = signal(false);
   form = signal<any>({ vehiclePlate: '', mobilizerId: null, loadingPlant: 'Babel - Huachipa', remarks: '' });
@@ -36,18 +49,39 @@ export class CargasComponent implements OnInit {
     { label: 'Cancelado',  value: '04', severity: 'danger'  }
   ];
 
-  constructor(private loadService: LoadService, private vehicleService: VehicleService,
-              private messageService: MessageService) {}
+  constructor(
+    private loadService: LoadService,
+    private vehicleService: VehicleService,
+    private employeeService: EmployeeService,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
+  ) {}
 
   ngOnInit() {
     this.loadLoads();
     this.vehicleService.getVehiclesByStatus('01').subscribe(v => this.availableVehicles.set(v));
+    this.employeeService.getEmployees().subscribe(emps =>
+      this.mobilizers.set(emps.filter((e: any) => e.roleCode === 'MOV'))
+    );
+    this.refreshTimer = setInterval(() => this.loadLoads(), 30_000);
+  }
+
+  ngOnDestroy() {
+    if (this.refreshTimer) clearInterval(this.refreshTimer);
   }
 
   loadLoads() {
     this.loading.set(true);
     this.loadService.getLoads().subscribe({
-      next: (l) => { this.loads.set(l); this.loading.set(false); },
+      next: (l) => {
+        // Sort: En Proceso → Pendiente → Completado → Cancelado, newest first within group
+        const sorted = [...l].sort((a, b) => {
+          const diff = (LOAD_PRIORITY[a.statusCode] ?? 9) - (LOAD_PRIORITY[b.statusCode] ?? 9);
+          return diff !== 0 ? diff : b.id - a.id;
+        });
+        this.loads.set(sorted);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
   }
@@ -72,21 +106,53 @@ export class CargasComponent implements OnInit {
         this.loadLoads();
         this.messageService.add({ severity: 'success', summary: 'Carga iniciada', detail: 'Proceso de carga registrado' });
       },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: e.error?.message || 'Error al iniciar carga' })
+      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
     });
   }
 
-  completeLoad(load: any) {
+  confirmComplete(load: any) {
+    this.confirmationService.confirm({
+      message: `¿Completar la carga del vehículo <strong>${load.vehiclePlate}</strong>?<br>
+                <small style="color:#94a3b8">El vehículo quedará listo para despacho.</small>`,
+      header: 'Completar Carga',
+      icon: 'pi pi-check-circle',
+      acceptLabel: 'Completar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-success',
+      accept: () => this.doCompleteLoad(load)
+    });
+  }
+
+  confirmCancel(load: any) {
+    this.confirmationService.confirm({
+      message: `¿Cancelar la carga del vehículo <strong>${load.vehiclePlate}</strong>?<br>
+                <small style="color:#ef4444">Esta acción no se puede deshacer.</small>`,
+      header: 'Cancelar Carga',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Cancelar carga',
+      rejectLabel: 'Mantener',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.doCancelLoad(load)
+    });
+  }
+
+  private doCompleteLoad(load: any) {
     this.loadService.completeLoad(load.id).subscribe({
-      next: () => { this.loadLoads(); this.messageService.add({ severity: 'success', summary: 'Completado', detail: 'Carga completada. Vehiculo listo para despacho.' }); },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: e.error?.message || 'Error al completar' })
+      next: () => {
+        this.loadLoads();
+        this.messageService.add({ severity: 'success', summary: 'Completado', detail: 'Carga completada. Vehículo listo para despacho.' });
+      },
+      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
     });
   }
 
-  cancelLoad(load: any) {
+  private doCancelLoad(load: any) {
     this.loadService.cancelLoad(load.id).subscribe({
-      next: () => { this.loadLoads(); this.messageService.add({ severity: 'warn', summary: 'Cancelado', detail: 'Carga cancelada. Vehiculo disponible.' }); },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: e.error?.message || 'Error al cancelar' })
+      next: () => {
+        this.loadLoads();
+        this.messageService.add({ severity: 'warn', summary: 'Cancelado', detail: 'Carga cancelada. Vehículo disponible.' });
+      },
+      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
     });
   }
 

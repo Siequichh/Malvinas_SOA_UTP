@@ -1,221 +1,488 @@
-:host {
-  display: block;
-  height: 100vh;
-}
+:host { display: block; height: 100vh; }
 
-// ────────────────────────────────────────────────────────────
-// Page layout
-// ────────────────────────────────────────────────────────────
 .login-page {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: #0d1117;
 }
 
-// ────────────────────────────────────────────────────────────
-// Brand panel (left 55%)
-// ────────────────────────────────────────────────────────────
+// ── Brand Panel ──────────────────────────────────────────────
 .brand-panel {
   position: relative;
-  flex: 0 0 55%;
+  flex: 0 0 54%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 3rem 3.5rem;
-  background: linear-gradient(145deg, #0a1628 0%, #0c1f35 55%, #091929 100%);
+  padding: 3.5rem 4rem;
+  // Uniform overlay — avoids harsh diagonal cut at the panel boundary
+  background:
+    linear-gradient(to right, rgba(4,10,20,0.83) 0%, rgba(4,10,20,0.83) 55%, rgba(4,10,20,0.96) 100%),
+    url('/assets/login-fleet.jpg') center / cover no-repeat;
+  background-color: #040a14;
   overflow: hidden;
-}
 
-// Decorative blobs
-.brand-decor {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-.brand-decor--1 {
-  width: 560px;
-  height: 560px;
-  top: -200px;
-  right: -180px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
-}
-.brand-decor--2 {
-  width: 320px;
-  height: 320px;
-  bottom: -100px;
-  left: -60px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
-}
-.brand-decor--3 {
-  width: 200px;
-  height: 200px;
-  bottom: 30%;
-  right: 10%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%);
-}
-
-.brand-content {
-  position: relative;
-  z-index: 1;
-  padding-top: 2rem;
-}
-
-.brand-logo-wrap {
-  width: 68px;
-  height: 68px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-
-  .pi {
-    font-size: 1.9rem;
-    color: #10b981;
+  // Right-edge alpha fade → blends seamlessly into the form panel background
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 180px;
+    background: linear-gradient(to right, transparent, var(--p-surface-ground));
+    pointer-events: none;
+    z-index: 3;
   }
 }
 
-.brand-name {
-  font-size: 2.6rem;
-  font-weight: 800;
-  color: #f1f5f9;
-  margin: 0 0 0.75rem;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
+// Glowing orbs for depth
+.bp-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+
+  &--1 {
+    width: 700px; height: 700px;
+    top: -250px; right: -200px;
+    background: radial-gradient(circle, rgba(16,185,129,0.11) 0%, transparent 60%);
+  }
+  &--2 {
+    width: 500px; height: 500px;
+    bottom: -200px; left: -120px;
+    background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 60%);
+  }
 }
 
-.brand-tagline {
-  font-size: 1rem;
-  color: #64748b;
-  margin: 0 0 2.75rem;
-  line-height: 1.7;
-  max-width: 380px;
+// Dot-grid background texture
+.bp-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(16,185,129,0.18) 1px, transparent 1px);
+  background-size: 30px 30px;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 100%);
+  -webkit-mask-image: linear-gradient(to bottom right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 100%);
 }
 
-.brand-features {
+.bp-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+.bp-logo {
+  width: 74px; height: 74px;
+  background: rgba(16,185,129,0.09);
+  border: 1.5px solid rgba(16,185,129,0.28);
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px rgba(16,185,129,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
+
+  .pi { font-size: 2.1rem; color: #10b981; }
+}
+
+.bp-title {
+  font-size: 3.25rem;
+  font-weight: 900;
+  color: #f8fafc;
+  line-height: 1.02;
+  letter-spacing: -1.5px;
+  margin: 0;
+}
+
+.bp-sub {
+  font-size: 0.87rem;
+  color: rgba(255,255,255,0.4);
+  margin: 0.6rem 0 0;
+  line-height: 1.65;
+  max-width: 340px;
+}
+
+// Stats row
+.bp-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  padding: 1.15rem 1.75rem;
+  background: rgba(16,185,129,0.055);
+  border: 1px solid rgba(16,185,129,0.15);
+  border-radius: 16px;
+  width: fit-content;
+}
+
+.bps-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .bps-n {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #10b981;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .bps-l {
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.36);
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    margin-top: 0.2rem;
+  }
+}
+
+.bps-sep {
+  width: 1px;
+  height: 38px;
+  background: rgba(16,185,129,0.18);
+}
+
+// Feature list
+.bp-features {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.78rem;
 
   li {
     display: flex;
     align-items: center;
-    gap: 0.875rem;
-    color: #94a3b8;
-    font-size: 0.9rem;
+    gap: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.87rem;
 
-    .pi {
-      color: #10b981;
-      font-size: 1.05rem;
-      flex-shrink: 0;
-    }
+    .pi { color: #10b981; font-size: 0.93rem; flex-shrink: 0; }
   }
 }
 
-.brand-footer {
+.bp-footer {
   position: relative;
   z-index: 1;
-  font-size: 0.78rem;
-  color: #334155;
-  margin: 0;
-  letter-spacing: 0.3px;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-// ────────────────────────────────────────────────────────────
-// Form panel (right 45%)
-// ────────────────────────────────────────────────────────────
+// ── Form Panel ───────────────────────────────────────────────
 .form-panel {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  background: #111827;
-}
+  padding: 2.5rem;
+  background: var(--p-surface-ground);
+  position: relative;
 
-.form-card {
-  width: 100%;
-  max-width: 400px;
-}
-
-// Mobile-only logo (hidden on desktop)
-.form-logo-mobile {
-  display: none;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  color: #10b981;
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-
-  .pi {
-    font-size: 1.6rem;
+  // Ambient glow centered on the card
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 65% 50% at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 70%);
+    pointer-events: none;
   }
 }
 
-.form-header {
-  margin-bottom: 2.25rem;
+// ── Form Card ────────────────────────────────────────────────
+.form-card {
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  z-index: 1;
+  background: var(--p-surface-card);
+  border: 1px solid var(--p-surface-border);
+  border-radius: 20px;
+  padding: 2.75rem 2.5rem;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.06),
+    0 8px 24px rgba(0,0,0,0.12),
+    0 24px 48px rgba(0,0,0,0.14),
+    0 0 0 1px rgba(255,255,255,0.025);
+
+  // Green top-edge highlight (premium card treatment)
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 2.5rem; right: 2.5rem; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(16,185,129,0.5), transparent);
+    pointer-events: none;
+  }
+}
+
+.fc-badge {
+  display: inline-block;
+  padding: 0.26rem 0.8rem;
+  background: rgba(16,185,129,0.08);
+  border: 1px solid rgba(16,185,129,0.20);
+  border-radius: 20px;
+  font-size: 0.595rem;
+  font-weight: 700;
+  color: #10b981;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  margin-bottom: 1.65rem;
+}
+
+.fc-mobile-logo {
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  color: #10b981;
+  font-size: 0.95rem;
+  font-weight: 700;
+
+  .pi { font-size: 1.5rem; }
+}
+
+.fc-header {
+  margin-bottom: 1.85rem;
 
   h2 {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #f1f5f9;
-    margin: 0 0 0.5rem;
-    letter-spacing: -0.3px;
+    color: var(--p-text-color);
+    margin: 0 0 0.35rem;
+    letter-spacing: -0.5px;
   }
 
   p {
-    font-size: 0.875rem;
-    color: #64748b;
+    font-size: 0.84rem;
+    color: var(--p-text-muted-color);
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.55;
   }
 }
 
-.login-form {
+.fc-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.1rem;
 }
 
-.field-group {
+.fc-field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.38rem;
 
   label {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--p-text-muted-color);
     text-transform: uppercase;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.7px;
   }
 }
 
-.form-help {
-  margin: 1.75rem 0 0;
-  font-size: 0.78rem;
-  color: #374151;
-  text-align: center;
-  line-height: 1.5;
-}
+// ── Custom Password Field ─────────────────────────────────────
+.fc-pass-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
 
-// ────────────────────────────────────────────────────────────
-// Responsive — hide brand panel on small screens
-// ────────────────────────────────────────────────────────────
-@media (max-width: 900px) {
-  .brand-panel {
-    display: none;
+  .fc-pass-icon {
+    position: absolute;
+    left: 0.85rem;
+    font-size: 0.83rem;
+    color: var(--p-text-muted-color);
+    pointer-events: none;
+    z-index: 1;
   }
 
-  .form-logo-mobile {
+  // Override PrimeNG input padding for icons
+  .p-inputtext {
+    padding-left: 2.4rem !important;
+    padding-right: 2.85rem !important;
+    width: 100%;
+  }
+
+  .fc-pass-toggle {
+    position: absolute;
+    right: 0.55rem;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    background: none;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--p-text-muted-color);
+    transition: color 0.15s ease, background 0.15s ease;
+    z-index: 1;
+
+    &:hover {
+      color: var(--p-text-color);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .pi { font-size: 0.88rem; }
   }
+}
+
+// ── Remember me + Forgot password ────────────────────────────
+.fc-row-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.fc-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+
+  span {
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+  }
+}
+
+.fc-forgot {
+  font-size: 0.8rem;
+  color: #10b981;
+  text-decoration: none;
+  opacity: 0.78;
+  transition: opacity 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover { opacity: 1; }
+}
+
+// ── Error state ───────────────────────────────────────────────
+.fc-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  background: rgba(239,68,68,0.07);
+  border: 1px solid rgba(239,68,68,0.18);
+  border-left: 3px solid #ef4444;
+  border-radius: 9px;
+  color: #ef4444;
+  font-size: 0.83rem;
+  line-height: 1.45;
+
+  i { font-size: 0.88rem; flex-shrink: 0; margin-top: 1px; }
+}
+
+// ── Footer row (security badge + help link) ───────────────────
+.fc-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--p-surface-border);
+}
+
+.fc-security {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.67rem;
+  color: var(--p-text-muted-color);
+  flex-shrink: 0;
+
+  .pi { color: #10b981; font-size: 0.7rem; }
+}
+
+.fc-help {
+  font-size: 0.73rem;
+  color: var(--p-text-muted-color);
+  margin: 0;
+  text-align: right;
+
+  a {
+    color: #10b981;
+    text-decoration: none;
+    opacity: 0.78;
+    transition: opacity 0.15s;
+    &:hover { opacity: 1; }
+  }
+}
+
+// ── PrimeNG deep overrides (scoped to login) ──────────────────
+:host ::ng-deep {
+
+  // Shadcn-style focus ring on all inputs
+  .fc-form .p-inputtext {
+    border-radius: 9px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:not(:disabled):focus {
+      border-color: rgba(16, 185, 129, 0.55) !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.10) !important;
+      outline: none !important;
+    }
+  }
+
+  // Submit button — spring bounce + glow on hover
+  .fc-form .p-button {
+    height: 44px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+    transition:
+      transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.22s ease !important;
+
+    &:not(.p-disabled):hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 28px rgba(16, 185, 129, 0.34) !important;
+    }
+
+    &:not(.p-disabled):active {
+      transform: translateY(0) scale(0.985) !important;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+      transition-duration: 0.08s !important;
+    }
+  }
+
+  // Compact checkbox
+  .fc-checkbox-label .p-checkbox {
+    width: 16px; height: 16px;
+
+    .p-checkbox-box {
+      width: 16px; height: 16px;
+      border-radius: 5px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+  }
+}
+
+// ── Responsive ───────────────────────────────────────────────
+@media (max-width: 900px) {
+  .brand-panel    { display: none; }
+  .form-panel     { padding: 1.5rem; background: var(--p-surface-ground); }
+  .fc-mobile-logo { display: flex; }
+
+  .form-card {
+    padding: 2rem 1.75rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  }
+}
+
+@media (max-width: 480px) {
+  .form-panel { padding: 1rem; }
+
+  .form-card { padding: 1.75rem 1.25rem; border-radius: 14px; }
+
+  .fc-row-inline  { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
+  .fc-forgot      { align-self: flex-end; margin-top: -0.35rem; }
+
+  .fc-footer-row  { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .fc-help        { text-align: left; }
 }

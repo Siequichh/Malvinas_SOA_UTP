@@ -33,8 +33,8 @@ public class SecurityConfig {
                     "/swagger-ui/**", "/swagger-ui.html",
                     "/api-docs/**", "/v3/api-docs/**"
                 ).permitAll()
-                // Lectura de cargas: supervisores y movilizadores
-                .requestMatchers(HttpMethod.GET, "/api/loads/**").hasAnyRole("ADM", "SUP", "MOV")
+                // Lectura de cargas: acceso libre para llamadas internas (reportes-service)
+                .requestMatchers(HttpMethod.GET, "/api/loads/**").permitAll()
                 // Gestion de cargas: movilizadores y supervisores
                 .requestMatchers("/api/loads/**").hasAnyRole("ADM", "SUP", "MOV")
                 // Cualquier otra solicitud requiere autenticacion

@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Variables ───────────────────────────────────── */
+:root {
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-info:    #0ea5e9;
+  --color-danger:  #ef4444;
+}
+
 /* ── Root / Dark mode ────────────────────────────────── */
 :root.app-dark {
   color-scheme: dark;
@@ -17,8 +25,8 @@ html, body {
   width: 100%;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Helvetica, Arial, sans-serif;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Fira Mono', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.5;
   background-color: var(--p-surface-ground);
@@ -29,8 +37,8 @@ html, body {
 /* ── Typography ──────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--p-text-color);
 }
 
@@ -52,31 +60,99 @@ a {
   background: var(--p-surface-card);
   border: 1px solid var(--p-surface-border);
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Page header layout ──────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.search-input {
+  width: 230px;
+  font-size: 0.85rem !important;
+  height: 36px;
+
+  @media (max-width: 600px) { width: 160px; }
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: var(--p-text-muted-color);
+
+  i { font-size: 2rem; opacity: 0.4; }
+  p { font-size: 0.875rem; }
+}
+
+/* ── Active status pulse animation ──────────────────── */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+.status-active {
+  animation: status-pulse 2s ease-in-out infinite;
 }
 
 /* ── PrimeNG overrides ───────────────────────────────── */
 .p-card {
   background: var(--p-surface-card);
   border: 1px solid var(--p-surface-border);
+  border-radius: 14px;
 }
 
 .p-datatable {
   .p-datatable-thead > tr > th {
     background: var(--p-surface-ground);
-    color: var(--p-text-color);
+    color: var(--p-text-muted-color);
+    border-bottom: 2px solid rgba(16,185,129,0.22) !important;
     border-color: var(--p-surface-border);
-    font-weight: 600;
-    font-size: 0.8rem;
+    font-weight: 700;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
+    padding: 0.85rem 1rem;
   }
   .p-datatable-tbody > tr {
     border-color: var(--p-surface-border);
-    transition: background 0.15s ease;
-    &:hover { background: var(--p-surface-hover) !important; }
-    > td { border-color: var(--p-surface-border); color: var(--p-text-color); }
+    transition: background 0.12s ease;
+    &:hover > td { background: rgba(16,185,129,0.04) !important; }
+    > td {
+      border-color: var(--p-surface-border);
+      color: var(--p-text-color);
+      font-size: 0.875rem;
+      padding: 0.75rem 1rem;
+    }
+  }
+  &.p-datatable-sm {
+    .p-datatable-thead > tr > th { padding: 0.6rem 0.85rem; }
+    .p-datatable-tbody > tr > td  { padding: 0.55rem 0.85rem; }
   }
 }
 
@@ -86,13 +162,26 @@ a {
   .p-dialog-footer { background: var(--p-surface-ground); border-top: 1px solid var(--p-surface-border); }
 }
 
-.p-tag { font-size: 0.75rem; font-weight: 600; }
+.p-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+}
+
+/* ── Monospace utility — plates, codes, DNIs ─────────── */
+.mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+  font-size: 0.875em;
+}
 
 /* ── Scrollbar ───────────────────────────────────────── */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--p-surface-ground); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: var(--p-surface-border);
-  border-radius: 4px;
+  border-radius: 3px;
   &:hover { background: var(--p-surface-overlay); }
 }

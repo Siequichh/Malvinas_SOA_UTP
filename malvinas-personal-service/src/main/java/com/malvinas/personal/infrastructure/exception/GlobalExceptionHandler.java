@@ -49,6 +49,13 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(HttpStatus.FORBIDDEN, "Acceso denegado", req, null));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArg(IllegalArgumentException ex, HttpServletRequest req) {
+        log.warn("Argumento invalido [{}]: {}", req.getRequestURI(), ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST, ex.getMessage(), req, null));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest req) {
         log.error("Error no controlado [{}]: {}", req.getRequestURI(), ex.getMessage(), ex);

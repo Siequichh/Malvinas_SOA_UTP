@@ -1,40 +1,55 @@
 <div>
   <p-toast />
-  <div class="flex justify-content-between align-items-center mb-4">
-    <h2 class="text-2xl font-bold m-0">Rutas y Despacho</h2>
-    <p-button label="Nuevo Despacho" icon="pi pi-plus" (onClick)="openCreate()" />
+  <p-confirmdialog />
+
+  <div class="page-header">
+    <h2 class="page-title">Rutas y Despacho</h2>
+    <div class="page-actions">
+      <p-iconfield>
+        <p-inputicon class="pi pi-search" />
+        <input pInputText placeholder="Buscar orden, vehículo, conductor..."
+               (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+               class="search-input" />
+      </p-iconfield>
+      @if (userRole() === 'ADM' || userRole() === 'SUP') {
+        <p-button label="Nuevo Despacho" icon="pi pi-plus" (onClick)="openCreate()" />
+      }
+    </div>
   </div>
 
-  <p-table [value]="dispatches()" [loading]="loading()" [paginator]="true" [rows]="15"
-           styleClass="p-datatable-sm">
+  <p-table #dt [value]="dispatches()" [loading]="loading()" [paginator]="true" [rows]="15"
+           styleClass="p-datatable-sm" [stripedRows]="true"
+           [globalFilterFields]="['loadingOrderCode','vehiclePlate','driverName']">
     <ng-template pTemplate="header">
       <tr>
         <th>Orden de Carga</th>
-        <th>Vehiculo</th>
+        <th>Vehículo</th>
         <th>Conductor</th>
         <th>Estado</th>
         <th>Salida Prog.</th>
         <th>Salida Real</th>
-        <th>Acciones</th>
+        <th style="width:90px; text-align:center">Acciones</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-d>
       <tr>
-        <td><strong>{{ d.loadingOrderCode || '-' }}</strong></td>
-        <td>{{ d.vehiclePlate }}</td>
+        <td><span class="mono">{{ d.loadingOrderCode || '—' }}</span></td>
+        <td><span class="mono">{{ d.vehiclePlate }}</span></td>
         <td>{{ d.driverName }}</td>
         <td>
           <p-tag [value]="getStatusLabel(d.statusCode)" [severity]="getStatusSeverity(d.statusCode)" />
         </td>
-        <td>{{ d.scheduledDepartureTime }}</td>
+        <td class="mono">{{ d.scheduledDepartureTime?.substring(0,5) || '—' }}</td>
         <td>{{ d.actualDepartureTime | date:'dd/MM HH:mm' }}</td>
-        <td>
-          <p-button *ngIf="d.statusCode === '01'" icon="pi pi-send" severity="warn"
-                    size="small" [rounded]="true" [text]="true" title="Registrar salida"
-                    (onClick)="registerDeparture(d)" />
-          <p-button *ngIf="d.statusCode === '02'" icon="pi pi-home" severity="success"
-                    size="small" [rounded]="true" [text]="true" title="Cerrar ruta"
-                    (onClick)="completeDispatch(d)" />
+        <td style="text-align:center">
+          @if (userRole() !== 'SEC') {
+            <p-button *ngIf="d.statusCode === '01'" icon="pi pi-send" severity="warn"
+                      size="small" [rounded]="true" [text]="true" title="Registrar salida"
+                      (onClick)="confirmDeparture(d)" />
+            <p-button *ngIf="d.statusCode === '02'" icon="pi pi-home" severity="success"
+                      size="small" [rounded]="true" [text]="true" title="Cerrar ruta"
+                      (onClick)="confirmComplete(d)" />
+          }
         </td>
       </tr>
     </ng-template>
@@ -45,29 +60,41 @@
 
   <!-- Nuevo Despacho Dialog -->
   <p-dialog [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)"
-            header="Programar Despacho" [modal]="true" [style]="{ width: '520px' }">
+            header="Programar Despacho" [modal]="true"
+            [resizable]="false" [style]="{ width: '540px' }">
     <div class="flex flex-column gap-3 p-3">
       <div class="flex flex-column gap-2">
-        <label>Placa del Vehiculo *</label>
+        <label>Placa del Vehículo *</label>
         <input pInputText [ngModel]="form().vehiclePlate"
                (ngModelChange)="updateForm('vehiclePlate', $event)"
-               placeholder="ABC-123" />
+               placeholder="ABC-123" class="mono" />
       </div>
       <div class="flex flex-column gap-2">
-        <label>ID del Conductor *</label>
-        <input pInputText type="number" [ngModel]="form().driverId"
-               (ngModelChange)="updateForm('driverId', +$event)"
-               placeholder="ID del empleado conductor" />
+        <label>Conductor *</label>
+        <p-select [options]="drivers()" optionLabel="fullName" optionValue="id"
+                  [ngModel]="form().driverId" (ngModelChange)="updateForm('driverId', $event)"
+                  placeholder="Seleccionar conductor" styleClass="w-full" [filter]="true"
+                  filterPlaceholder="Buscar conductor..." />
+      </div>
+      <div class="flex flex-column gap-2">
+        <label>Puntos de Entrega</label>
+        <p-multiselect [options]="deliveryPoints()" optionLabel="name" optionValue="id"
+                       [ngModel]="form().deliveryPointIds"
+                       (ngModelChange)="updateForm('deliveryPointIds', $event)"
+                       placeholder="Seleccionar puntos" styleClass="w-full"
+                       display="chip" appendTo="body" />
       </div>
       <div class="flex flex-column gap-2">
         <label>Hora de Salida Programada</label>
-        <input pInputText type="time" [ngModel]="form().scheduledDepartureTime"
-               (ngModelChange)="updateForm('scheduledDepartureTime', $event)" />
+        <p-datepicker [timeOnly]="true" hourFormat="24"
+                      [ngModel]="departureTime()"
+                      (ngModelChange)="onTimeChange($event)"
+                      placeholder="Seleccionar hora" styleClass="w-full" />
       </div>
       <div class="flex flex-column gap-2">
         <label>Observaciones</label>
         <textarea pTextarea [ngModel]="form().remarks"
-                  (ngModelChange)="updateForm('remarks', $event)" rows="3"></textarea>
+                  (ngModelChange)="updateForm('remarks', $event)" rows="2"></textarea>
       </div>
     </div>
     <ng-template pTemplate="footer">

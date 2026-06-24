@@ -1,66 +1,96 @@
-<div>
-  <h2 class="text-2xl font-bold mb-4" style="color: var(--p-text-color)">Dashboard</h2>
+<div class="dashboard">
+  <div class="page-header">
+    <h2>{{ userRole() === 'SUP' ? 'Panel Operativo' : 'Dashboard' }}</h2>
+  </div>
 
   @if (loading()) {
-    <div class="grid">
-      @for (i of [1,2,3,4]; track i) {
-        <div class="col-12 md:col-6 lg:col-3">
-          <p-skeleton height="120px" styleClass="mb-2" />
-        </div>
+    <div class="kpi-grid">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <div class="kpi-card"><p-skeleton height="80px" /></div>
       }
     </div>
   } @else {
+
     <!-- KPI Cards -->
-    <div class="grid mb-4">
+    <div class="kpi-grid">
       @for (kpi of kpis(); track kpi.name) {
-        <div class="col-12 md:col-6 lg:col-2">
-          <div class="card text-center">
-            <p class="text-sm mb-1" style="color: var(--p-text-muted-color)">{{ kpi.name }}</p>
-            <p class="text-3xl font-bold m-0" style="color: var(--p-primary-color)">{{ kpi.value ?? '-' }}</p>
-            <p class="text-xs mt-1" style="color: var(--p-text-muted-color)">{{ kpi.unit }}</p>
-          </div>
+        <div class="kpi-card">
+          <p class="kpi-name">{{ kpi.name }}</p>
+          <p class="kpi-value">{{ kpi.value ?? '—' }}</p>
+          <p class="kpi-unit">{{ kpi.unit }}</p>
         </div>
       }
     </div>
 
     <!-- Charts -->
-    <div class="grid">
-      <div class="col-12 md:col-6">
-        <p-card header="Vehículos por Estado">
-          @if (chartData()) {
-            <p-chart type="doughnut" [data]="chartData()" [style]="{ height: '280px' }" />
-          } @else {
-            <p style="color: var(--p-text-muted-color)">Sin datos disponibles</p>
-          }
-        </p-card>
+    <div class="charts-row">
+      <div class="card">
+        <h3 class="chart-title">Vehículos por Estado</h3>
+        @if (chartData()) {
+          <p-chart type="doughnut" [data]="chartData()" [options]="chartOptions" height="260px" />
+        } @else {
+          <div class="empty-state"><i class="pi pi-chart-pie"></i><p>Sin datos de flota</p></div>
+        }
       </div>
-      <div class="col-12 md:col-6">
-        <p-card header="Resumen Operacional">
-          <div class="flex flex-column gap-3">
-            <div class="flex justify-content-between align-items-center">
-              <span style="color: var(--p-text-color)">Total Vehículos</span>
-              <p-tag [value]="(dashboard()?.totalVehicles ?? '-').toString()" severity="info" />
-            </div>
-            <div class="flex justify-content-between align-items-center">
-              <span style="color: var(--p-text-color)">Disponibles</span>
-              <p-tag [value]="(dashboard()?.availableVehicles ?? '-').toString()" severity="success" />
-            </div>
-            <div class="flex justify-content-between align-items-center">
-              <span style="color: var(--p-text-color)">En Ruta</span>
-              <p-tag [value]="(dashboard()?.vehiclesOnRoute ?? '-').toString()" severity="warning" />
-            </div>
-            <div class="flex justify-content-between align-items-center">
-              <span style="color: var(--p-text-color)">Utilización Flota</span>
-              <p-tag
-                [value]="dashboard()?.fleetUtilizationPercent != null
-                  ? dashboard()!.fleetUtilizationPercent.toFixed(1) + '%'
-                  : '-'"
-                severity="primary"
-              />
-            </div>
+      <div class="card">
+        <h3 class="chart-title">Resumen Operacional</h3>
+        <div class="summary-list">
+          <div class="summary-row">
+            <span>Total Vehículos</span>
+            <p-tag [value]="(dashboard()?.totalVehicles ?? '—').toString()" severity="info" />
           </div>
-        </p-card>
+          <div class="summary-row">
+            <span>Disponibles</span>
+            <p-tag [value]="(dashboard()?.availableVehicles ?? '—').toString()" severity="success" />
+          </div>
+          <div class="summary-row">
+            <span>En Ruta</span>
+            <p-tag [value]="(dashboard()?.vehiclesOnRoute ?? '—').toString()" severity="warning" />
+          </div>
+          <div class="summary-row">
+            <span>Utilización Flota</span>
+            <p-tag
+              [value]="dashboard()?.fleetUtilizationPercent != null
+                ? dashboard()!.fleetUtilizationPercent.toFixed(1) + '%'
+                : '—'"
+              severity="primary"
+            />
+          </div>
+          <div class="summary-row">
+            <span>Cargas Activas</span>
+            <p-tag [value]="(dashboard()?.activeLoads ?? '—').toString()" severity="secondary" />
+          </div>
+          <div class="summary-row">
+            <span>Despachos Hoy</span>
+            <p-tag [value]="(dashboard()?.dispatchesToday ?? '—').toString()" severity="primary" />
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Solo ADM: accesos rápidos de gestión -->
+    @if (userRole() === 'ADM') {
+      <div class="card admin-shortcuts">
+        <p class="shortcuts-label">Gestión del Sistema</p>
+        <div class="shortcuts-row">
+          <a routerLink="/personal" class="shortcut-chip">
+            <i class="pi pi-users"></i> Personal
+          </a>
+          <a routerLink="/vehiculos" class="shortcut-chip">
+            <i class="pi pi-car"></i> Flota
+          </a>
+          <a routerLink="/cargas" class="shortcut-chip">
+            <i class="pi pi-box"></i> Cargas
+          </a>
+          <a routerLink="/rutas" class="shortcut-chip">
+            <i class="pi pi-map"></i> Rutas
+          </a>
+          <a routerLink="/reportes" class="shortcut-chip">
+            <i class="pi pi-chart-bar"></i> Reportes
+          </a>
+        </div>
+      </div>
+    }
+
   }
 </div>

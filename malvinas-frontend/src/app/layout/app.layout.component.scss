@@ -174,10 +174,10 @@
       left: 0;
       top: 50%;
       transform: translateY(-50%);
-      width: 3px;
-      height: 18px;
+      width: 4px;
+      height: 22px;
       background: var(--accent);
-      border-radius: 0 2px 2px 0;
+      border-radius: 0 3px 3px 0;
     }
   }
 }
@@ -297,7 +297,9 @@
 /* ── Topbar ─────────────────────────────────────────────── */
 .layout-topbar {
   height: 60px;
-  background: var(--p-surface-card);
+  background: color-mix(in srgb, var(--p-surface-card) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--p-surface-border);
   display: flex;
   align-items: center;

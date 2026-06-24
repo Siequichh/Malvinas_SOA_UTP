@@ -1,20 +1,109 @@
-<div>
-  <h2 class="text-2xl font-bold mb-4">Reportes y Analytics</h2>
-  <div class="grid">
-    @for (kpi of kpis(); track kpi.name) {
-      <div class="col-12 md:col-4 lg:col-2">
-        <div class="card text-center">
-          <p class="text-surface-500 text-sm mb-1">{{ kpi.name }}</p>
-          <p class="text-2xl font-bold text-primary m-0">{{ kpi.value }}</p>
-          <p class="text-xs text-surface-400 mt-1">{{ kpi.unit }}</p>
-        </div>
-      </div>
-    }
+<div class="reportes">
+
+  <div class="page-header">
+    <h2>Reportes y Analytics</h2>
   </div>
-  @if (fleetReport()) {
-    <p-card header="Reporte de Flota" styleClass="mt-4">
-      <p>Total vehiculos: <strong>{{ fleetReport().totalVehicles }}</strong></p>
-      <p>Utilizacion: <strong>{{ fleetReport().utilizationPercent?.toFixed(1) }}%</strong></p>
-    </p-card>
+
+  <!-- KPI Cards -->
+  @if (kpis().length > 0) {
+    <div class="kpi-grid">
+      @for (kpi of kpis(); track kpi.name) {
+        <div class="kpi-card card">
+          <p class="kpi-name">{{ kpi.name }}</p>
+          <p class="kpi-value">{{ kpi.value }}</p>
+          <p class="kpi-unit">{{ kpi.unit }}</p>
+          @if (kpi.trend) {
+            <span class="kpi-trend" [class.trend-up]="kpi.trend === 'up'" [class.trend-down]="kpi.trend === 'down'">
+              <i [class]="kpi.trend === 'up' ? 'pi pi-arrow-up' : kpi.trend === 'down' ? 'pi pi-arrow-down' : 'pi pi-minus'"></i>
+            </span>
+          }
+        </div>
+      }
+    </div>
   }
+
+  <!-- Fleet summary from dashboard -->
+  @if (dashboard()) {
+    <div class="summary-strip">
+      <div class="summary-item">
+        <span class="summary-value">{{ dashboard().totalVehicles }}</span>
+        <span class="summary-label">Total Flota</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-value success">{{ dashboard().availableVehicles }}</span>
+        <span class="summary-label">Disponibles</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-value warn">{{ dashboard().vehiclesOnRoute }}</span>
+        <span class="summary-label">En Ruta</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-value info">{{ dashboard().activeLoads }}</span>
+        <span class="summary-label">Cargas Activas</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-value primary">{{ dashboard().dispatchesToday }}</span>
+        <span class="summary-label">Despachos Hoy</span>
+      </div>
+      <div class="summary-item util">
+        <span class="summary-value">{{ dashboard().fleetUtilizationPercent?.toFixed(1) }}%</span>
+        <span class="summary-label">Utilización</span>
+        <p-progressbar [value]="dashboard().fleetUtilizationPercent" [showValue]="false"
+                       styleClass="util-bar" />
+      </div>
+    </div>
+  }
+
+  <!-- Charts -->
+  <div class="charts-row">
+    <div class="card chart-card">
+      <h3 class="chart-title">Estado de la Flota</h3>
+      @if (fleetChart()) {
+        <p-chart type="doughnut" [data]="fleetChart()" [options]="chartOptions.doughnut"
+                 height="260px" />
+      } @else {
+        <div class="empty-state"><i class="pi pi-chart-pie"></i><p>Sin datos de flota</p></div>
+      }
+    </div>
+    <div class="card chart-card">
+      <h3 class="chart-title">Despachos por Estado</h3>
+      @if (dispatchChart()) {
+        <p-chart type="bar" [data]="dispatchChart()" [options]="chartOptions.bar"
+                 height="260px" />
+      } @else {
+        <div class="empty-state"><i class="pi pi-chart-bar"></i><p>Sin datos de despachos</p></div>
+      }
+    </div>
+  </div>
+
+  <!-- Recent dispatches table -->
+  <div class="card mt-4">
+    <h3 class="chart-title mb-3">Últimas Salidas</h3>
+    <p-table [value]="dispatches()" styleClass="p-datatable-sm" [rows]="10">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Orden</th>
+          <th>Vehículo</th>
+          <th>Conductor</th>
+          <th>Estado</th>
+          <th>Salida Prog.</th>
+          <th>Salida Real</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td><span class="mono">{{ d.loadingOrderCode || '—' }}</span></td>
+          <td><span class="mono">{{ d.vehiclePlate }}</span></td>
+          <td>{{ d.driverName }}</td>
+          <td><p-tag [value]="getDispatchLabel(d.statusCode)" [severity]="getDispatchSeverity(d.statusCode)" /></td>
+          <td class="mono">{{ d.scheduledDepartureTime?.substring(0,5) || '—' }}</td>
+          <td>{{ d.actualDepartureTime | date:'dd/MM HH:mm' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="6" class="text-center p-4 text-muted">Sin despachos registrados</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+
 </div>

@@ -1,0 +1,289 @@
+# =============================================================================
+# Malvinas SOA — Render Blueprint
+# Documentacion completa: DEPLOY_RENDER.md
+#
+# Orden de deploy para Paso 1 (login/personal slice):
+#   1. malvinas-db (PostgreSQL)
+#   2. malvinas-eureka
+#   3. malvinas-personal
+#   4. malvinas-auth
+#   5. malvinas-api-gateway
+#   6. malvinas-frontend
+#
+# Paso 2 agrega: malvinas-vehiculos, malvinas-cargas, malvinas-rutas, malvinas-reportes
+# =============================================================================
+
+databases:
+  - name: malvinas-db
+    databaseName: malvinas_db
+    user: malvinas_user
+    plan: free
+    region: oregon
+    ipAllowList: []  # accesible desde todos los servicios Render
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # 1. Eureka Server — Service Discovery
+  # URL resultante: https://malvinas-eureka.onrender.com
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-eureka
+    env: docker
+    rootDir: malvinas-eureka-server
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      # EUREKA_HOSTNAME debe coincidir exactamente con el nombre del servicio en Render
+      # Si cambias el nombre del servicio, actualiza este valor
+      - key: EUREKA_HOSTNAME
+        value: malvinas-eureka.onrender.com
+
+  # ---------------------------------------------------------------------------
+  # 2. personal-service — Empleados, roles, asistencia
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-personal
+    env: docker
+    rootDir: malvinas-personal-service
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      - key: EUREKA_URI
+        fromService:
+          type: web
+          name: malvinas-eureka
+          property: hostURL
+      - key: JWT_SECRET
+        sync: false  # establecer manualmente en el dashboard de Render
+      - key: POSTGRESQL_HOST
+        fromDatabase:
+          name: malvinas-db
+          property: host
+      - key: POSTGRESQL_DB
+        fromDatabase:
+          name: malvinas-db
+          property: database
+      - key: POSTGRESQL_USER
+        fromDatabase:
+          name: malvinas-db
+          property: user
+      - key: POSTGRESQL_PASS
+        fromDatabase:
+          name: malvinas-db
+          property: password
+
+  # ---------------------------------------------------------------------------
+  # 3. auth-service — Autenticacion JWT (sin BD)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-auth
+    env: docker
+    rootDir: malvinas-auth-service
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      - key: EUREKA_URI
+        fromService:
+          type: web
+          name: malvinas-eureka
+          property: hostURL
+      - key: JWT_SECRET
+        sync: false  # MISMO valor que personal-service y api-gateway
+
+  # ---------------------------------------------------------------------------
+  # 4. API Gateway — Punto de entrada, validacion JWT, enrutamiento
+  # IMPORTANTE: el nombre debe ser exactamente "malvinas-api-gateway"
+  # porque environment.prod.ts tiene hardcodeado https://malvinas-api-gateway.onrender.com
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-api-gateway
+    env: docker
+    rootDir: malvinas-api-gateway
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      - key: EUREKA_URI
+        fromService:
+          type: web
+          name: malvinas-eureka
+          property: hostURL
+      - key: JWT_SECRET
+        sync: false  # MISMO valor que personal-service y auth-service
+
+  # ---------------------------------------------------------------------------
+  # 5. vehiculos-service — Gestion de flota
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-vehiculos
+    env: docker
+    rootDir: malvinas-vehiculos-service
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      - key: EUREKA_URI
+        fromService:
+          type: web
+          name: malvinas-eureka
+          property: hostURL
+      - key: POSTGRESQL_HOST
+        fromDatabase:
+          name: malvinas-db
+          property: host
+      - key: POSTGRESQL_DB
+        fromDatabase:
+          name: malvinas-db
+          property: database
+      - key: POSTGRESQL_USER
+        fromDatabase:
+          name: malvinas-db
+          property: user
+      - key: POSTGRESQL_PASS
+        fromDatabase:
+          name: malvinas-db
+          property: password
+
+  # ---------------------------------------------------------------------------
+  # 6. cargas-service — Control de cargas
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-cargas
+    env: docker
+    rootDir: malvinas-cargas-service
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      - key: EUREKA_URI
+        fromService:
+          type: web
+          name: malvinas-eureka
+          property: hostURL
+      - key: POSTGRESQL_HOST
+        fromDatabase:
+          name: malvinas-db
+          property: host
+      - key: POSTGRESQL_DB
+        fromDatabase:
+          name: malvinas-db
+          property: database
+      - key: POSTGRESQL_USER
+        fromDatabase:
+          name: malvinas-db
+          property: user
+      - key: POSTGRESQL_PASS
+        fromDatabase:
+          name: malvinas-db
+          property: password
+
+  # ---------------------------------------------------------------------------
+  # 7. rutas-service — Despachos y puntos de entrega
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-rutas
+    env: docker
+    rootDir: malvinas-rutas-service
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      - key: EUREKA_URI
+        fromService:
+          type: web
+          name: malvinas-eureka
+          property: hostURL
+      - key: POSTGRESQL_HOST
+        fromDatabase:
+          name: malvinas-db
+          property: host
+      - key: POSTGRESQL_DB
+        fromDatabase:
+          name: malvinas-db
+          property: database
+      - key: POSTGRESQL_USER
+        fromDatabase:
+          name: malvinas-db
+          property: user
+      - key: POSTGRESQL_PASS
+        fromDatabase:
+          name: malvinas-db
+          property: password
+
+  # ---------------------------------------------------------------------------
+  # 8. reportes-service — Dashboard y KPIs (sin BD)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-reportes
+    env: docker
+    rootDir: malvinas-reportes-service
+    plan: free
+    region: oregon
+    healthCheckPath: /actuator/health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      - key: EUREKA_URI
+        fromService:
+          type: web
+          name: malvinas-eureka
+          property: hostURL
+
+  # ---------------------------------------------------------------------------
+  # 9. Frontend Angular — Static Site
+  # Build directo (sin Docker): usa environment.prod.ts con la URL del gateway
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: malvinas-frontend
+    env: static
+    rootDir: malvinas-frontend
+    buildCommand: npm install && npm run build:prod
+    staticPublishPath: dist/malvinas-frontend/browser
+    autoDeploy: false
+    # SPA routing: todas las rutas devuelven index.html para que Angular Router funcione
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

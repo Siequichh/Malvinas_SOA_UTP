@@ -16,7 +16,7 @@ import { RippleModule } from 'primeng/ripple';
 export class AppLayoutComponent implements OnInit {
 
   private readonly allMenuItems = [
-    { label: 'Dashboard', icon: 'pi pi-home',      route: '/dashboard', roles: ['ADM','SUP','MOV','DRV','SEC'] },
+    { label: 'Dashboard', icon: 'pi pi-home',      route: '/dashboard', roles: ['ADM','SUP'] },
     { label: 'Vehiculos',  icon: 'pi pi-car',       route: '/vehiculos', roles: ['ADM','SUP'] },
     { label: 'Cargas',     icon: 'pi pi-box',       route: '/cargas',    roles: ['ADM','SUP','MOV'] },
     { label: 'Personal',   icon: 'pi pi-users',     route: '/personal',  roles: ['ADM'] },

@@ -33,9 +33,9 @@ public class SecurityConfig {
                     "/swagger-ui/**", "/swagger-ui.html",
                     "/api-docs/**", "/v3/api-docs/**"
                 ).permitAll()
-                // Lectura de vehiculos: supervisores, conductores y seguridad
-                .requestMatchers(HttpMethod.GET, "/api/vehicles/**").hasAnyRole("ADM", "SUP", "DRV", "SEC", "MOV")
-                .requestMatchers(HttpMethod.GET, "/api/vehicle-types/**").hasAnyRole("ADM", "SUP", "DRV", "SEC", "MOV")
+                // Lectura de vehiculos: acceso libre para llamadas internas (reportes-service)
+                .requestMatchers(HttpMethod.GET, "/api/vehicles/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/vehicle-types/**").permitAll()
                 // Gestion de vehiculos: solo administradores y supervisores
                 .requestMatchers("/api/vehicles/**").hasAnyRole("ADM", "SUP")
                 .requestMatchers("/api/vehicle-types/**").hasAnyRole("ADM", "SUP")

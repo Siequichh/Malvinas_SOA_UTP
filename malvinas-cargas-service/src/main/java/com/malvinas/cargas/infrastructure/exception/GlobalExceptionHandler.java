@@ -39,6 +39,13 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(400, "Bad Request", ex.getMessage(), req.getRequestURI(), LocalDateTime.now()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArg(IllegalArgumentException ex, HttpServletRequest req) {
+        log.warn("Invalid argument [{}]: {}", req.getRequestURI(), ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(400, "Bad Request", ex.getMessage(), req.getRequestURI(), LocalDateTime.now()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex, HttpServletRequest req) {
         log.error("Unhandled exception [{}]: {}", req.getRequestURI(), ex.getMessage(), ex);

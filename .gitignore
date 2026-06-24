@@ -1,6 +1,7 @@
 # ── Credenciales y configuracion sensible ────────────────────────────────
 .env
-# Permitir solo el template (sin valores reales)
+.env.local
+.env.*.local
 !.env.example
 
 # ── Maven / Spring Boot ───────────────────────────────────────────────────
@@ -10,18 +11,44 @@ target/
 *.war
 *.ear
 
-# ── IntelliJ IDEA ────────────────────────────────────────────────────────
-.idea/workspace.xml
-.idea/usage.statistics.xml
-.idea/shelf/
-*.iml
-!.idea/
+# ── Logs ─────────────────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # ── Node / Angular ───────────────────────────────────────────────────────
 node_modules/
 dist/
 .angular/
+.npm/
+
+# ── IntelliJ IDEA ────────────────────────────────────────────────────────
+# Se trackea .idea/ para compartir run configs y code style.
+# Se ignoran solo los archivos personales de cada dev:
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/shelf/
+.idea/httpRequests/
+*.iml
+
+# ── VS Code ───────────────────────────────────────────────────────────────
+.vscode/
+
+# ── Documentos y archivos multimedia ─────────────────────────────────────
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+*.zip
+*.rar
+*.7z
 
 # ── OS ───────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+desktop.ini

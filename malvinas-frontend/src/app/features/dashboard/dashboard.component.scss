@@ -1,1 +1,102 @@
 :host { display: block; }
+
+.dashboard { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 1rem;
+}
+
+.kpi-card {
+  background: var(--p-surface-card);
+  border: 1px solid var(--p-surface-border);
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
+.kpi-name {
+  font-size: 0.68rem;
+  color: var(--p-text-muted-color);
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--p-primary-color);
+  margin: 0;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.kpi-unit {
+  font-size: 0.68rem;
+  color: var(--p-text-muted-color);
+  margin: 0.35rem 0 0;
+}
+
+.chart-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--p-text-muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0 0 1.25rem;
+}
+
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.summary-list { display: flex; flex-direction: column; gap: 0; }
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--p-text-color);
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--p-surface-border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.admin-shortcuts {
+  .shortcuts-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--p-text-muted-color);
+    font-weight: 700;
+    margin: 0 0 0.85rem;
+  }
+
+  .shortcuts-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+  .shortcut-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    background: rgba(16,185,129,0.07);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: #10b981;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.15s;
+
+    &:hover { background: rgba(16,185,129,0.14); opacity: 1; }
+  }
+}

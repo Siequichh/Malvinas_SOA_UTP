@@ -1,7 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VehicleService } from '../../core/services/vehicle.service';
+import { AuthService } from '../../core/services/auth.service';
+import { parseApiError } from '../../core/utils/error.utils';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -9,18 +11,21 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-vehiculos',
   standalone: true,
   imports: [CommonModule, FormsModule, TableModule, ButtonModule, TagModule,
-    DialogModule, InputTextModule, SelectModule, ToastModule],
+    DialogModule, InputTextModule, SelectModule, ToastModule, IconFieldModule, InputIconModule],
   providers: [MessageService],
   templateUrl: './vehiculos.component.html',
   styleUrls: ['./vehiculos.component.scss']
 })
 export class VehiculosComponent implements OnInit {
+  readonly userRole = inject(AuthService).userRole;
   vehicles = signal<any[]>([]);
   vehicleTypes = signal<any[]>([]);
   loading = signal(true);
@@ -68,7 +73,9 @@ export class VehiculosComponent implements OnInit {
 
   openEdit(vehicle: any) {
     this.selectedVehicle.set(vehicle);
-    this.form.set({ ...vehicle, vehicleTypeId: vehicle.vehicleTypeId });
+    // ponytail: VehicleResponse has vehicleTypeName but not vehicleTypeId — resolve by name
+    const typeId = this.vehicleTypes().find((t: any) => t.name === vehicle.vehicleTypeName)?.id ?? null;
+    this.form.set({ ...vehicle, vehicleTypeId: typeId });
     this.editMode.set(true);
     this.dialogVisible.set(true);
   }
@@ -85,14 +92,14 @@ export class VehiculosComponent implements OnInit {
       : this.vehicleService.createVehicle(this.form());
     obs.subscribe({
       next: () => { this.dialogVisible.set(false); this.loadVehicles(); this.messageService.add({ severity: 'success', summary: 'Exito', detail: 'Vehiculo guardado' }); },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: e.error?.message || 'Error al guardar' })
+      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
     });
   }
 
   changeStatus() {
     this.vehicleService.changeStatus(this.selectedVehicle().licensePlate, this.statusForm()).subscribe({
       next: () => { this.statusDialogVisible.set(false); this.loadVehicles(); this.messageService.add({ severity: 'success', summary: 'Estado actualizado', detail: '' }); },
-      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: e.error?.message || 'Error al cambiar estado' })
+      error: (e) => this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) })
     });
   }
 

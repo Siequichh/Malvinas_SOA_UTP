@@ -33,9 +33,9 @@ public class SecurityConfig {
                     "/swagger-ui/**", "/swagger-ui.html",
                     "/api-docs/**", "/v3/api-docs/**"
                 ).permitAll()
-                // Lectura: roles con acceso operativo
-                .requestMatchers(HttpMethod.GET, "/api/dispatches/**").hasAnyRole("ADM", "SUP", "DRV", "SEC")
-                .requestMatchers(HttpMethod.GET, "/api/delivery-points/**").hasAnyRole("ADM", "SUP", "DRV", "SEC")
+                // Lectura: acceso libre para llamadas internas (reportes-service)
+                .requestMatchers(HttpMethod.GET, "/api/dispatches/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/delivery-points/**").permitAll()
                 // Gestion de despachos: conductores pueden registrar salida/llegada, supervisores gestionan
                 .requestMatchers("/api/dispatches/**").hasAnyRole("ADM", "SUP", "DRV")
                 // Gestion de puntos de entrega: solo administradores y supervisores
