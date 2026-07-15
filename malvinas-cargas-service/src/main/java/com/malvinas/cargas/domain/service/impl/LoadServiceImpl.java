@@ -74,6 +74,18 @@ public class LoadServiceImpl implements LoadService {
     }
 
     @Override
+    public LoadResponse update(Long id, LoadRequest request) {
+        Load load = getLoad(id);
+        if (!load.getStatus().equals(LoadStatus.IN_PROGRESS.getCode())) {
+            throw new BusinessException("Solo se pueden editar cargas en estado EN_PROCESO");
+        }
+        load.setLoadingPlant(request.loadingPlant());
+        load.setRemarks(request.remarks());
+        Load saved = loadRepo.save(load);
+        return loadMapper.toResponse(saved);
+    }
+
+    @Override
     public LoadResponse complete(Long id) {
         Load load = getLoad(id);
         validateTransition(load, LoadStatus.COMPLETED);

@@ -22,5 +22,6 @@ public record DispatchResponse(
     String loadingOrderCode,
     List<DispatchPointResponse> points,
     LocalDateTime createdAt,
-    LocalDateTime modifiedAt
+    LocalDateTime modifiedAt,
+    String createdBy
 ) {}

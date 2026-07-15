@@ -9,9 +9,9 @@ server:
   port: 8085
 
 routes:
-  vehiculos-uri: http://localhost:8082
-  cargas-uri: http://localhost:8083
-  rutas-uri: http://localhost:8084
+  vehiculos-uri: http://vehiculos-service
+  cargas-uri: http://cargas-service
+  rutas-uri: http://rutas-service
 
 eureka:
   client:

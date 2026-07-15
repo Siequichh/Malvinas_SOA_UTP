@@ -74,6 +74,7 @@ public class VehicleServiceImpl implements VehicleService {
         Vehicle v = getByPlate(plate);
         VehicleStatus current = v.getStatus();
         VehicleStatus next = DisplayableEnum.fromCode(VehicleStatus.class, req.newStatusCode());
+        if (current == next) return vehicleMapper.toResponse(v);
         if (!current.canTransitionTo(next))
             throw new BusinessException("Cannot transition from " + current.getDisplayName() + " to " + next.getDisplayName());
         StatusHistory h = new StatusHistory();

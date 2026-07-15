@@ -1,1 +1,3 @@
 :host { display: block; }
+
+:host ::ng-deep .status-filter { min-width: 170px; }

@@ -9,12 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Sort;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
+@Profile("!test")
 @Configuration
 public class DataInitializer {
 

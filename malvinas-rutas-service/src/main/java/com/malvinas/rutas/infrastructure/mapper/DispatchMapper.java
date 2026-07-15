@@ -14,7 +14,8 @@ public interface DispatchMapper {
     @Mapping(target = "statusDisplay",  expression = "java(dispatch.getStatus().getDisplayName())")
     @Mapping(target = "priority",       expression = "java(dispatch.getPriority().getCode())")
     @Mapping(target = "priorityDisplay",expression = "java(dispatch.getPriority().getDisplayName())")
-    @Mapping(target = "points", source = "dispatchPoints")
+    @Mapping(target = "points",         source = "dispatchPoints")
+    @Mapping(target = "createdBy",      source = "createdBy")
     DispatchResponse toDto(Dispatch dispatch);
 
     @Mapping(target = "deliveryPointId",   source = "deliveryPoint.id")

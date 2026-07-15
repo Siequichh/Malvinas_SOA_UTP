@@ -7,9 +7,11 @@ import com.malvinas.rutas.domain.enumerate.DispatchStatus;
 import com.malvinas.rutas.domain.enumerate.DisplayableEnum;
 import com.malvinas.rutas.domain.repository.*;
 import com.malvinas.rutas.domain.service.DispatchService;
+import com.malvinas.rutas.infrastructure.client.PersonalServiceClient;
 import com.malvinas.rutas.infrastructure.client.VehiculosServiceClient;
 import com.malvinas.rutas.infrastructure.exception.*;
 import com.malvinas.rutas.infrastructure.mapper.DispatchMapper;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,19 +27,65 @@ public class DispatchServiceImpl implements DispatchService {
     private final DispatchRepository dispatchRepo;
     private final DeliveryPointRepository deliveryPointRepo;
     private final VehiculosServiceClient vehiculosClient;
+    private final PersonalServiceClient personalClient;
     private final DispatchMapper mapper;
     private final AtomicInteger sequence = new AtomicInteger(1);
 
     public DispatchServiceImpl(DispatchRepository dispatchRepo, DeliveryPointRepository deliveryPointRepo,
-            VehiculosServiceClient vehiculosClient, DispatchMapper mapper) {
+            VehiculosServiceClient vehiculosClient, PersonalServiceClient personalClient, DispatchMapper mapper) {
         this.dispatchRepo = dispatchRepo;
         this.deliveryPointRepo = deliveryPointRepo;
         this.vehiculosClient = vehiculosClient;
+        this.personalClient = personalClient;
         this.mapper = mapper;
+    }
+
+    @PostConstruct
+    @Transactional(readOnly = true)
+    public void initSequence() {
+        dispatchRepo.findMaxLoadingOrderCode().ifPresent(code -> {
+            try {
+                String[] parts = code.split("-");
+                if (parts.length == 3) {
+                    sequence.set(Integer.parseInt(parts[2]) + 1);
+                }
+            } catch (Exception ignored) {}
+        });
+    }
+
+    @Override
+    public List<DispatchResponse> findByDriver(Long driverId) {
+        return dispatchRepo.findByDriverId(driverId).stream().map(mapper::toDto).toList();
+    }
+
+    @Override
+    public DispatchResponse accept(Long id, Long employeeId) {
+        Dispatch dispatch = getDispatch(id);
+        // Idempotent: if already accepted by the same driver, return as-is
+        if (dispatch.getStatus() == DispatchStatus.ON_ROUTE) {
+            if (!dispatch.getDriverId().equals(employeeId))
+                throw new BusinessException("Solo el conductor asignado puede aceptar este despacho");
+            return mapper.toDto(dispatch);
+        }
+        if (dispatch.getStatus() != DispatchStatus.SCHEDULED)
+            throw new BusinessException("El despacho debe estar PROGRAMADO para aceptar la salida");
+        if (!dispatch.getDriverId().equals(employeeId))
+            throw new BusinessException("Solo el conductor asignado puede aceptar este despacho");
+
+        String code = "OC-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                + "-" + String.format("%04d", sequence.getAndIncrement());
+        dispatch.setLoadingOrderCode(code);
+        dispatch.setActualDepartureTime(LocalDateTime.now());
+        dispatch.setStatus(DispatchStatus.ON_ROUTE);
+        Dispatch saved = dispatchRepo.save(dispatch);
+        vehiculosClient.changeVehicleStatus(saved.getVehiclePlate(), "04", "Conductor aceptó despacho: " + code);
+        return mapper.toDto(saved);
     }
 
     @Override
     public DispatchResponse create(DispatchRequest req) {
+        if (!personalClient.isEmployeeActive(req.driverId()))
+            throw new BusinessException("El conductor con ID " + req.driverId() + " no está activo");
         Dispatch dispatch = new Dispatch();
         dispatch.setVehiclePlate(req.vehiclePlate());
         dispatch.setDriverId(req.driverId());
@@ -103,7 +151,33 @@ public class DispatchServiceImpl implements DispatchService {
 
         dispatch.setReturnTime(LocalDateTime.now());
         dispatch.setStatus(DispatchStatus.COMPLETED);
-        vehiculosClient.changeVehicleStatus(dispatch.getVehiclePlate(), "01", "Despacho completado");
+        Dispatch saved = dispatchRepo.save(dispatch);
+        vehiculosClient.changeVehicleStatusBestEffort(saved.getVehiclePlate(), "01", "Despacho completado");
+        return mapper.toDto(saved);
+    }
+
+    @Override
+    public DispatchResponse cancel(Long id) {
+        Dispatch dispatch = getDispatch(id);
+        if (dispatch.getStatus() != DispatchStatus.SCHEDULED)
+            throw new BusinessException("Solo se pueden cancelar despachos en estado PROGRAMADO");
+        dispatch.setStatus(DispatchStatus.CANCELLED);
+        // Vehicle stays CARGADO — a new dispatch can be created for the same vehicle
+        return mapper.toDto(dispatchRepo.save(dispatch));
+    }
+
+    @Override
+    public DispatchResponse update(Long id, DispatchRequest req) {
+        Dispatch dispatch = getDispatch(id);
+        boolean isCancelled = dispatch.getStatus() == DispatchStatus.CANCELLED;
+        if (dispatch.getStatus() != DispatchStatus.SCHEDULED && !isCancelled)
+            throw new BusinessException("Solo se pueden editar despachos en estado PROGRAMADO o CANCELADO");
+        dispatch.setVehiclePlate(req.vehiclePlate());
+        dispatch.setDriverId(req.driverId());
+        if (req.scheduledDepartureTime() != null) dispatch.setScheduledDepartureTime(req.scheduledDepartureTime());
+        if (req.remarks() != null) dispatch.setRemarks(req.remarks());
+        // Reactivate cancelled dispatch back to SCHEDULED
+        if (isCancelled) dispatch.setStatus(DispatchStatus.SCHEDULED);
         return mapper.toDto(dispatchRepo.save(dispatch));
     }
 

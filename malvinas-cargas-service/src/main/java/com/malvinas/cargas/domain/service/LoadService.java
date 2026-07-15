@@ -9,6 +9,7 @@ public interface LoadService {
     LoadResponse findById(Long id);
     List<LoadResponse> findAll();
     List<LoadResponse> findActive();
+    LoadResponse update(Long id, LoadRequest request);
     LoadResponse complete(Long id);
     LoadResponse cancel(Long id);
 }

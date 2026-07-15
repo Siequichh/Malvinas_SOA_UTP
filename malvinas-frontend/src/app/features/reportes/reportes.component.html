@@ -1,7 +1,11 @@
 <div class="reportes">
 
   <div class="page-header">
-    <h2>Reportes y Analytics</h2>
+    <h2 class="page-title">Reportes y Analytics</h2>
+    <div class="page-actions">
+      <p-button icon="pi pi-refresh" severity="secondary" [text]="true"
+                [loading]="loading()" (onClick)="loadAll()" title="Refrescar" />
+    </div>
   </div>
 
   <!-- KPI Cards -->

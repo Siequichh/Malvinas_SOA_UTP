@@ -3,6 +3,11 @@
   <div class="page-header">
     <h2 class="page-title">Gestión de Vehículos</h2>
     <div class="page-actions">
+      <p-button icon="pi pi-refresh" severity="secondary" [text]="true"
+                [loading]="loading()" (onClick)="loadVehicles()" title="Refrescar" />
+      <p-select [options]="statusOptions" optionLabel="label" optionValue="value"
+                [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)"
+                placeholder="Todos los estados" [showClear]="true" styleClass="status-filter" />
       <p-iconfield>
         <p-inputicon class="pi pi-search" />
         <input pInputText placeholder="Buscar placa, marca, modelo..."
@@ -15,7 +20,7 @@
     </div>
   </div>
 
-  <p-table #dt [value]="vehicles()" [loading]="loading()" [paginator]="true" [rows]="15"
+  <p-table #dt [value]="filteredVehicles()" [loading]="loading()" [paginator]="true" [rows]="15"
            styleClass="p-datatable-sm" [stripedRows]="true"
            [globalFilterFields]="['licensePlate','vehicleTypeName','brand','model']">
     <ng-template pTemplate="header">

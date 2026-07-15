@@ -42,7 +42,7 @@ public class SecurityConfig {
                 // Lectura de roles: cualquier empleado autenticado
                 .requestMatchers(HttpMethod.GET, "/api/roles/**").hasAnyRole("ADM", "SUP", "MOV", "DRV", "SEC")
                 // Gestion de empleados: solo administradores
-                .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("ADM", "SUP", "MOV")
+                .requestMatchers(HttpMethod.GET, "/api/employees/**").hasAnyRole("ADM", "SUP", "MOV", "SEC")
                 .requestMatchers("/api/employees/**").hasRole("ADM")
                 // Asistencia: supervisores y el propio empleado (via Gateway)
                 .requestMatchers("/api/attendances/**").hasAnyRole("ADM", "SUP")

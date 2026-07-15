@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportService } from '../../core/services/report.service';
 import { DispatchService } from '../../core/services/dispatch.service';
 import { EmployeeService } from '../../core/services/employee.service';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { TableModule } from 'primeng/table';
@@ -12,11 +13,12 @@ import { ProgressBarModule } from 'primeng/progressbar';
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [CommonModule, CardModule, ChartModule, TableModule, TagModule, ProgressBarModule],
+  imports: [CommonModule, ButtonModule, CardModule, ChartModule, TableModule, TagModule, ProgressBarModule],
   templateUrl: './reportes.component.html',
   styleUrls: ['./reportes.component.scss']
 })
 export class ReportesComponent implements OnInit {
+  loading     = signal(false);
   dashboard   = signal<any>(null);
   kpis        = signal<any[]>([]);
   dispatches  = signal<any[]>([]);
@@ -61,11 +63,12 @@ export class ReportesComponent implements OnInit {
     private employeeService: EmployeeService
   ) {}
 
-  ngOnInit() {
+  ngOnInit() { this.loadAll(); }
+
+  loadAll() {
+    this.loading.set(true);
     this.reportService.getDashboard().subscribe({ next: d => { this.dashboard.set(d); this.buildFleetChart(d); } });
     this.reportService.getKpis().subscribe({ next: k => this.kpis.set(k) });
-
-    // Load employees to enrich conductor column, then load dispatches
     this.employeeService.getEmployees().subscribe({
       next: (emps) => {
         const driverMap = new Map(emps.map((e: any) => [e.id, `${e.firstName} ${e.lastName}`]));
@@ -74,13 +77,15 @@ export class ReportesComponent implements OnInit {
             const enriched = d.map((x: any) => ({ ...x, driverName: driverMap.get(x.driverId) ?? '—' }));
             this.dispatches.set(enriched.slice(0, 10));
             this.buildDispatchChart(d);
-          }
+            this.loading.set(false);
+          },
+          error: () => this.loading.set(false)
         });
       },
       error: () => {
-        // Fallback: load without driver names
         this.dispatchService.getDispatches().subscribe({
-          next: d => { this.dispatches.set(d.slice(0, 10)); this.buildDispatchChart(d); }
+          next: d => { this.dispatches.set(d.slice(0, 10)); this.buildDispatchChart(d); this.loading.set(false); },
+          error: () => this.loading.set(false)
         });
       }
     });

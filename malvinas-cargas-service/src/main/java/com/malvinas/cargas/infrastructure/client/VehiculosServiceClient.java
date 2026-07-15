@@ -1,12 +1,16 @@
 package com.malvinas.cargas.infrastructure.client;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
 public class VehiculosServiceClient {
+
+    private static final Logger log = LoggerFactory.getLogger(VehiculosServiceClient.class);
 
     private final RestClient restClient;
 
@@ -24,7 +28,7 @@ public class VehiculosServiceClient {
     }
 
     public void changeStatusFallback(String plate, String statusCode, String reason, Throwable t) {
-        // Log and continue - vehicle status update failed
+        log.error("vehiculos-service unreachable — cannot update vehicle status plate={} code={}: {}", plate, statusCode, t.getMessage());
     }
 
     public record StatusChangeRequest(String newStatusCode, String reason, Long employeeId) {}

@@ -44,6 +44,12 @@ public class LoadController {
         return ResponseEntity.status(HttpStatus.CREATED).body(loadService.create(request));
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "Update loading details (remarks, loading plant)")
+    public ResponseEntity<LoadResponse> update(@PathVariable Long id, @Valid @RequestBody LoadRequest request) {
+        return ResponseEntity.ok(loadService.update(id, request));
+    }
+
     @PutMapping("/{id}/complete")
     @Operation(summary = "Complete loading — vehicle is ready for dispatch")
     public ResponseEntity<LoadResponse> complete(@PathVariable Long id) {

@@ -14,4 +14,8 @@ export class DispatchService {
   registerDeparture(id: number) { return this.http.post<any>(`${this.apiUrl}/dispatches/${id}/departure`, {}); }
   completeDispatch(id: number) { return this.http.put<any>(`${this.apiUrl}/dispatches/${id}/complete`, {}); }
   getDeliveryPoints() { return this.http.get<any[]>(`${this.apiUrl}/delivery-points`); }
+  getPendingByDriver(driverId: number) { return this.http.get<any[]>(`${this.apiUrl}/dispatches/pending?driverId=${driverId}`); }
+  acceptDispatch(id: number) { return this.http.post<any>(`${this.apiUrl}/dispatches/${id}/accept`, {}); }
+  cancelDispatch(id: number) { return this.http.put<any>(`${this.apiUrl}/dispatches/${id}/cancel`, {}); }
+  updateDispatch(id: number, data: any) { return this.http.put<any>(`${this.apiUrl}/dispatches/${id}`, data); }
 }

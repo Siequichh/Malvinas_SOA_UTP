@@ -2,9 +2,59 @@
   <p-toast />
   <p-confirmdialog />
 
+  <!-- DRV: banner de despacho pendiente -->
+  @if (userRole() === 'DRV') {
+    @for (d of dispatches(); track d.id) {
+      @if (d.statusCode === '01') {
+        <div class="drv-pending-banner">
+          <div class="drv-banner-left">
+            <i class="pi pi-send drv-banner-icon"></i>
+            <div>
+              <span class="drv-banner-title">Despacho asignado — Vehículo {{ d.vehiclePlate }}</span>
+              <span class="drv-banner-sub">Acepta la salida para generar la Orden de Carga</span>
+            </div>
+          </div>
+          <div class="drv-banner-actions">
+            <p-button label="Aceptar salida" icon="pi pi-check" severity="warn"
+                      [loading]="submitting()" [disabled]="submitting()"
+                      (onClick)="confirmAccept(d)" />
+            <p-button label="Rechazar" icon="pi pi-times" severity="danger"
+                      [text]="true" [disabled]="submitting()"
+                      (onClick)="confirmReject(d)" />
+          </div>
+        </div>
+      }
+    }
+    <!-- DRV: QR card para despacho activo -->
+    @if (activeDispatch(); as active) {
+      <div class="qr-card">
+        <div class="qr-card-info">
+          <span class="qr-card-label">Orden de Carga activa</span>
+          <code class="qr-card-code">{{ active.loadingOrderCode }}</code>
+          <span class="qr-card-vehicle">Vehículo: {{ active.vehiclePlate }}</span>
+        </div>
+        <div class="qr-code-wrapper">
+          <qrcode [qrdata]="active.loadingOrderCode" [width]="160" [margin]="2"
+                  colorDark="#000000" colorLight="#ffffff"
+                  (qrCodeURL)="onQrCodeURL($event)" />
+        </div>
+        @if (qrDownloadUrl()) {
+          <a [href]="qrDownloadUrl()" [download]="active.loadingOrderCode + '.png'" class="qr-download-link">
+            <i class="pi pi-download"></i> Descargar QR
+          </a>
+        }
+      </div>
+    }
+  }
+
   <div class="page-header">
     <h2 class="page-title">Rutas y Despacho</h2>
     <div class="page-actions">
+      <p-button icon="pi pi-refresh" severity="secondary" [text]="true"
+                [loading]="loading()" (onClick)="loadDispatches()" title="Refrescar" />
+      <p-select [options]="statusOptions" optionLabel="label" optionValue="value"
+                [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)"
+                placeholder="Todos los estados" [showClear]="true" styleClass="status-filter" />
       <p-iconfield>
         <p-inputicon class="pi pi-search" />
         <input pInputText placeholder="Buscar orden, vehículo, conductor..."
@@ -14,10 +64,13 @@
       @if (userRole() === 'ADM' || userRole() === 'SUP') {
         <p-button label="Nuevo Despacho" icon="pi pi-plus" (onClick)="openCreate()" />
       }
+      @if (userRole() === 'SEC') {
+        <p-button label="Escanear QR" icon="pi pi-qrcode" severity="secondary" (onClick)="openScanDialog()" />
+      }
     </div>
   </div>
 
-  <p-table #dt [value]="dispatches()" [loading]="loading()" [paginator]="true" [rows]="15"
+  <p-table #dt [value]="filteredDispatches()" [loading]="loading()" [paginator]="true" [rows]="15"
            styleClass="p-datatable-sm" [stripedRows]="true"
            [globalFilterFields]="['loadingOrderCode','vehiclePlate','driverName']">
     <ng-template pTemplate="header">
@@ -28,46 +81,94 @@
         <th>Estado</th>
         <th>Salida Prog.</th>
         <th>Salida Real</th>
-        <th style="width:90px; text-align:center">Acciones</th>
+        <th style="width:120px; text-align:center">Acciones</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-d>
       <tr>
-        <td><span class="mono">{{ d.loadingOrderCode || '—' }}</span></td>
-        <td><span class="mono">{{ d.vehiclePlate }}</span></td>
-        <td>{{ d.driverName }}</td>
-        <td>
+        <td data-label="Orden de Carga">
+          <span class="mono">{{ d.loadingOrderCode || '—' }}</span>
+          @if (d.loadingOrderCode && d.statusCode === '02' && userRole() === 'SEC') {
+            <span class="oc-badge">OC vigente</span>
+          }
+        </td>
+        <td data-label="Vehículo"><span class="mono">{{ d.vehiclePlate }}</span></td>
+        <td data-label="Conductor">{{ d.driverName }}</td>
+        <td data-label="Estado">
           <p-tag [value]="getStatusLabel(d.statusCode)" [severity]="getStatusSeverity(d.statusCode)" />
         </td>
-        <td class="mono">{{ d.scheduledDepartureTime?.substring(0,5) || '—' }}</td>
-        <td>{{ d.actualDepartureTime | date:'dd/MM HH:mm' }}</td>
-        <td style="text-align:center">
-          @if (userRole() !== 'SEC') {
-            <p-button *ngIf="d.statusCode === '01'" icon="pi pi-send" severity="warn"
-                      size="small" [rounded]="true" [text]="true" title="Registrar salida"
-                      [disabled]="submitting()" (onClick)="confirmDeparture(d)" />
-            <p-button *ngIf="d.statusCode === '02'" icon="pi pi-home" severity="success"
-                      size="small" [rounded]="true" [text]="true" title="Cerrar ruta"
-                      [disabled]="submitting()" (onClick)="confirmComplete(d)" />
+        <td data-label="Salida Prog." class="mono hide-mobile">{{ d.scheduledDepartureTime?.substring(0,5) || '—' }}</td>
+        <td data-label="Salida Real" class="hide-mobile">{{ d.actualDepartureTime | date:'dd/MM HH:mm' }}</td>
+        <td data-label="Acciones" style="text-align:center">
+          @if (userRole() === 'DRV') {
+            @if (d.statusCode === '01') {
+              <p-button icon="pi pi-check-circle" severity="warn"
+                        size="small" [rounded]="true" [text]="true" title="Aceptar salida"
+                        [disabled]="submitting()" (onClick)="confirmAccept(d)" />
+            }
+            @if (d.statusCode === '02') {
+              <p-button icon="pi pi-home" severity="success"
+                        size="small" [rounded]="true" [text]="true" title="Cerrar ruta"
+                        [disabled]="submitting()" (onClick)="confirmComplete(d)" />
+            }
+          } @else if (userRole() !== 'SEC') {
+            @if (d.statusCode === '01') {
+              <p-button icon="pi pi-pencil" severity="info"
+                        size="small" [rounded]="true" [text]="true" title="Editar despacho"
+                        [disabled]="submitting()" (onClick)="openEdit(d)" />
+              <p-button icon="pi pi-send" severity="secondary"
+                        size="small" [rounded]="true" [text]="true" title="Forzar salida (SUP/ADM)"
+                        [disabled]="submitting()" (onClick)="confirmDeparture(d)" />
+              <p-button icon="pi pi-times" severity="danger"
+                        size="small" [rounded]="true" [text]="true" title="Cancelar despacho"
+                        [disabled]="submitting()" (onClick)="confirmCancelDispatch(d)" />
+            }
+            @if (d.statusCode === '02') {
+              <p-button icon="pi pi-home" severity="success"
+                        size="small" [rounded]="true" [text]="true" title="Cerrar ruta"
+                        [disabled]="submitting()" (onClick)="confirmComplete(d)" />
+            }
+            @if (d.statusCode === '04') {
+              <p-button icon="pi pi-user-edit" severity="warn"
+                        size="small" [rounded]="true" [text]="true" title="Reasignar conductor"
+                        [disabled]="submitting()" (onClick)="openEdit(d)" />
+            }
           }
         </td>
       </tr>
     </ng-template>
     <ng-template pTemplate="emptymessage">
-      <tr><td colspan="7" class="text-center p-4">No hay despachos registrados</td></tr>
+      <tr><td colspan="7">
+        <div class="empty-state">
+          <i class="pi pi-map"></i>
+          <p>No hay despachos registrados</p>
+        </div>
+      </td></tr>
     </ng-template>
   </p-table>
 
-  <!-- Nuevo Despacho Dialog -->
+  <!-- Nuevo / Editar Despacho Dialog -->
   <p-dialog [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)"
-            header="Programar Despacho" [modal]="true"
+            [header]="editingId() ? 'Editar Despacho' : 'Programar Despacho'" [modal]="true"
             [resizable]="false" [style]="{ width: '540px' }">
     <div class="flex flex-column gap-3 p-3">
       <div class="flex flex-column gap-2">
         <label>Placa del Vehículo *</label>
-        <input pInputText [ngModel]="form().vehiclePlate"
-               (ngModelChange)="updateForm('vehiclePlate', $event)"
-               placeholder="ABC-123" class="mono" />
+        @if (!editingId()) {
+          <p-select [options]="cargadoVehicles()" optionLabel="licensePlate" optionValue="licensePlate"
+                    [ngModel]="form().vehiclePlate" (ngModelChange)="updateForm('vehiclePlate', $event)"
+                    placeholder="Seleccionar vehículo cargado" styleClass="w-full mono"
+                    [filter]="true" filterPlaceholder="Buscar placa..." appendTo="body">
+            <ng-template let-v pTemplate="item">
+              <span class="mono">{{ v.licensePlate }}</span>
+              <span class="ml-2 text-xs text-color-secondary">{{ v.vehicleTypeName }}</span>
+            </ng-template>
+          </p-select>
+        } @else {
+          <input pInputText [ngModel]="form().vehiclePlate"
+                 (ngModelChange)="updateForm('vehiclePlate', $event)"
+                 placeholder="ABC-123" class="mono" />
+        }
       </div>
       <div class="flex flex-column gap-2">
         <label>Conductor *</label>
@@ -76,14 +177,16 @@
                   placeholder="Seleccionar conductor" styleClass="w-full" [filter]="true"
                   filterPlaceholder="Buscar conductor..." />
       </div>
-      <div class="flex flex-column gap-2">
-        <label>Puntos de Entrega</label>
-        <p-multiselect [options]="deliveryPoints()" optionLabel="name" optionValue="id"
-                       [ngModel]="form().deliveryPointIds"
-                       (ngModelChange)="updateForm('deliveryPointIds', $event)"
-                       placeholder="Seleccionar puntos" styleClass="w-full"
-                       display="chip" appendTo="body" />
-      </div>
+      @if (!editingId()) {
+        <div class="flex flex-column gap-2">
+          <label>Puntos de Entrega</label>
+          <p-multiselect [options]="deliveryPoints()" optionLabel="name" optionValue="id"
+                         [ngModel]="form().deliveryPointIds"
+                         (ngModelChange)="updateForm('deliveryPointIds', $event)"
+                         placeholder="Seleccionar puntos" styleClass="w-full"
+                         display="chip" appendTo="body" />
+        </div>
+      }
       <div class="flex flex-column gap-2">
         <label>Hora de Salida Programada</label>
         <p-datepicker [timeOnly]="true" hourFormat="24"
@@ -99,7 +202,32 @@
     </div>
     <ng-template pTemplate="footer">
       <p-button label="Cancelar" severity="secondary" (onClick)="dialogVisible.set(false)" />
-      <p-button label="Programar" icon="pi pi-calendar" [loading]="submitting()" [disabled]="submitting()" (onClick)="saveDispatch()" />
+      <p-button [label]="editingId() ? 'Guardar cambios' : 'Programar'" icon="pi pi-calendar"
+                [loading]="submitting()" [disabled]="submitting()" (onClick)="saveDispatch()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- SEC: Escanear QR dialog -->
+  <p-dialog [visible]="scanDialogVisible()" (visibleChange)="closeScanDialog()"
+            header="Verificar Orden de Carga" [modal]="true"
+            [resizable]="false" [style]="{ width: '360px' }">
+    <div class="scan-dialog-body">
+      <div id="qr-reader" style="width:300px; margin:0 auto"></div>
+      @if (scannedOC()) {
+        <div class="scan-result">
+          <span class="scan-oc-label">OC escaneada:</span>
+          <code class="mono">{{ scannedOC() }}</code>
+        </div>
+      }
+      @if (scannedResult(); as res) {
+        <p-tag [severity]="res.valid ? 'success' : 'danger'" [value]="res.message" styleClass="scan-tag" />
+      }
+      @if (!scannedOC()) {
+        <p class="scan-hint">Apunta la cámara al código QR del conductor</p>
+      }
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button label="Cerrar" severity="secondary" (onClick)="closeScanDialog()" />
     </ng-template>
   </p-dialog>
 </div>

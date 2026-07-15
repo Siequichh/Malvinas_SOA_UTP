@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VehicleService } from '../../core/services/vehicle.service';
@@ -38,12 +38,18 @@ export class VehiculosComponent implements OnInit {
   form = signal<any>({ licensePlate: '', vehicleTypeId: null, brand: '', model: '', year: null, color: '' });
   statusForm = signal<any>({ newStatusCode: '', reason: '' });
 
+  statusFilter = signal<string | null>(null);
+  readonly filteredVehicles = computed(() => {
+    const f = this.statusFilter();
+    return f ? this.vehicles().filter((v: any) => v.statusCode === f) : this.vehicles();
+  });
+
   readonly statusOptions = [
-    { label: 'Disponible', value: '01' },
-    { label: 'En Carga', value: '02' },
-    { label: 'Cargado', value: '03' },
-    { label: 'En Ruta', value: '04' },
-    { label: 'Mantenimiento', value: '05' }
+    { label: 'Disponible',   value: '01' },
+    { label: 'En Carga',     value: '02' },
+    { label: 'Cargado',      value: '03' },
+    { label: 'En Ruta',      value: '04' },
+    { label: 'Mantenimiento',value: '05' }
   ];
 
   constructor(private vehicleService: VehicleService, private messageService: MessageService) {}
@@ -56,7 +62,15 @@ export class VehiculosComponent implements OnInit {
   loadVehicles() {
     this.loading.set(true);
     this.vehicleService.getVehicles().subscribe({
-      next: (v) => { this.vehicles.set(v); this.loading.set(false); },
+      next: (v) => {
+        const sorted = [...v].sort((a: any, b: any) => {
+          const ta = a.modifiedAt ? new Date(a.modifiedAt).getTime() : 0;
+          const tb = b.modifiedAt ? new Date(b.modifiedAt).getTime() : 0;
+          return tb - ta;
+        });
+        this.vehicles.set(sorted);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
   }

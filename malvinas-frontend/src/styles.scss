@@ -177,6 +177,64 @@ a {
   font-size: 0.875em;
 }
 
+/* ── Mobile: table → card list ──────────────────────── */
+@media (max-width: 640px) {
+  /* Hide table column headers */
+  .p-datatable thead { display: none !important; }
+
+  /* Each row becomes a card */
+  .p-datatable .p-datatable-tbody > tr {
+    display: block !important;
+    border: 1px solid var(--p-surface-border) !important;
+    border-radius: 10px !important;
+    margin-bottom: 0.65rem !important;
+    padding: 0.1rem 0 !important;
+    background: var(--p-surface-card) !important;
+  }
+  .p-datatable .p-datatable-tbody > tr:hover > td { background: transparent !important; }
+
+  /* Each cell becomes a label-value row */
+  .p-datatable .p-datatable-tbody > tr > td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 1px solid var(--p-surface-border) !important;
+    padding: 0.55rem 0.85rem !important;
+    font-size: 0.82rem !important;
+    min-height: 44px; /* touch target */
+
+    &:last-child { border-bottom: none !important; }
+
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--p-text-muted-color);
+      flex-shrink: 0;
+      margin-right: 0.5rem;
+    }
+  }
+
+  /* Hide columns marked for desktop only */
+  .hide-mobile { display: none !important; }
+
+  /* Paginator compact */
+  .p-paginator { padding: 0.5rem 0.25rem !important; flex-wrap: wrap; gap: 0.2rem; }
+
+  /* Dialogs full-screen */
+  .p-dialog { width: 100% !important; max-width: 100% !important; margin: 0 !important; border-radius: 0 !important; min-height: 100dvh !important; }
+  .p-dialog .p-dialog-content { min-height: 60dvh; }
+}
+
+/* ── Touch targets ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .p-button.p-button-sm { min-height: 36px; min-width: 36px; }
+  .search-input { width: 140px !important; }
+  .page-header { gap: 0.5rem; }
+}
+
 /* ── Scrollbar ───────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

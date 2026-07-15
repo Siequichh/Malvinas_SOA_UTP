@@ -36,8 +36,8 @@ public class SecurityConfig {
                 // Lectura: acceso libre para llamadas internas (reportes-service)
                 .requestMatchers(HttpMethod.GET, "/api/dispatches/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/delivery-points/**").permitAll()
-                // Gestion de despachos: conductores pueden registrar salida/llegada, supervisores gestionan
-                .requestMatchers("/api/dispatches/**").hasAnyRole("ADM", "SUP", "DRV")
+                // Gestion de despachos: conductores pueden aceptar su despacho, supervisores gestionan
+                .requestMatchers("/api/dispatches/**").hasAnyRole("ADM", "SUP", "DRV", "SEC")
                 // Gestion de puntos de entrega: solo administradores y supervisores
                 .requestMatchers("/api/delivery-points/**").hasAnyRole("ADM", "SUP")
                 // Cualquier otra solicitud requiere autenticacion

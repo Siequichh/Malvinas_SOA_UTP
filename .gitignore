@@ -48,6 +48,9 @@ dist/
 *.rar
 *.7z
 
+# ── Material de exposición (uso interno, no versionar) ───────────────────
+exposicion/
+
 # ── OS ───────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

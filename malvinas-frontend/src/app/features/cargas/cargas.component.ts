@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LoadService } from '../../core/services/load.service';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { parseApiError } from '../../core/utils/error.utils';
 import { VehicleService } from '../../core/services/vehicle.service';
 import { EmployeeService } from '../../core/services/employee.service';
@@ -19,7 +20,8 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
-const LOAD_PRIORITY: Record<string, number> = { '02': 0, '01': 1, '03': 2, '04': 3 };
+const LOAD_PRIORITY_MOV: Record<string, number> = { '02': 0, '01': 1, '03': 2, '04': 3 };
+const LOAD_PRIORITY_SUP: Record<string, number> = { '03': 0, '02': 1, '01': 2, '04': 3 };
 
 @Component({
   selector: 'app-cargas',
@@ -31,17 +33,25 @@ const LOAD_PRIORITY: Record<string, number> = { '02': 0, '01': 1, '03': 2, '04':
   templateUrl: './cargas.component.html',
   styleUrls: ['./cargas.component.scss']
 })
-export class CargasComponent implements OnInit, OnDestroy {
-  readonly userRole = inject(AuthService).userRole;
+export class CargasComponent implements OnInit {
+  private authService = inject(AuthService);
+  readonly userRole = this.authService.userRole;
 
-  private refreshTimer: ReturnType<typeof setInterval> | null = null;
+  private prevLoadStatusMap = new Map<number, string>();
   loads = signal<any[]>([]);
   availableVehicles = signal<any[]>([]);
   mobilizers = signal<any[]>([]);
   loading = signal(true);
   dialogVisible = signal(false);
   submitting = signal(false);
+  statusFilter = signal<string | null>(null);
+  editingId = signal<number | null>(null);
   form = signal<any>({ vehiclePlate: '', mobilizerId: null, loadingPlant: 'Babel - Huachipa', remarks: '' });
+
+  readonly filteredLoads = computed(() => {
+    const f = this.statusFilter();
+    return f ? this.loads().filter((x: any) => x.statusCode === f) : this.loads();
+  });
 
   readonly statusOptions = [
     { label: 'Pendiente', value: '01', severity: 'secondary' },
@@ -55,7 +65,8 @@ export class CargasComponent implements OnInit, OnDestroy {
     private vehicleService: VehicleService,
     private employeeService: EmployeeService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
@@ -64,22 +75,32 @@ export class CargasComponent implements OnInit, OnDestroy {
     this.employeeService.getEmployees().subscribe(emps =>
       this.mobilizers.set(emps.filter((e: any) => e.roleCode === 'MOV'))
     );
-    this.refreshTimer = setInterval(() => this.loadLoads(), 30_000);
-  }
-
-  ngOnDestroy() {
-    if (this.refreshTimer) clearInterval(this.refreshTimer);
   }
 
   loadLoads() {
     this.loading.set(true);
     this.loadService.getLoads().subscribe({
       next: (l) => {
-        // Sort: En Proceso → Pendiente → Completado → Cancelado, newest first within group
+        const priority = this.userRole() === 'MOV' ? LOAD_PRIORITY_MOV : LOAD_PRIORITY_SUP;
         const sorted = [...l].sort((a, b) => {
-          const diff = (LOAD_PRIORITY[a.statusCode] ?? 9) - (LOAD_PRIORITY[b.statusCode] ?? 9);
+          const diff = (priority[a.statusCode] ?? 9) - (priority[b.statusCode] ?? 9);
           return diff !== 0 ? diff : b.id - a.id;
         });
+        // Notify SUP/ADM when a load changes to Completado/Cargado
+        const role = this.userRole();
+        if ((role === 'SUP' || role === 'ADM') && this.prevLoadStatusMap.size > 0) {
+          for (const load of sorted) {
+            const prev = this.prevLoadStatusMap.get(load.id);
+            if (prev && prev !== '03' && load.statusCode === '03') {
+              this.notificationService.notify(
+                'pi pi-check-circle', 'Vehículo Cargado',
+                `${load.vehiclePlate} está listo para despacho — click para programar`,
+                `/rutas?plate=${load.vehiclePlate}`, 'success'
+              );
+            }
+          }
+        }
+        this.prevLoadStatusMap = new Map(sorted.map((l: any) => [l.id, l.statusCode]));
         this.loads.set(sorted);
         this.loading.set(false);
       },
@@ -96,29 +117,65 @@ export class CargasComponent implements OnInit, OnDestroy {
   }
 
   openCreate() {
-    this.form.set({ vehiclePlate: '', mobilizerId: null, loadingPlant: 'Babel - Huachipa', remarks: '' });
+    const user = this.authService.currentUser();
+    this.editingId.set(null);
+    this.form.set({ vehiclePlate: '', mobilizerId: user?.id ?? null, loadingPlant: 'Babel - Huachipa', remarks: '' });
+    this.dialogVisible.set(true);
+  }
+
+  openEdit(load: any) {
+    if (load.statusCode !== '02') {
+      this.messageService.add({ severity: 'warn', summary: 'No se puede editar', detail: 'Solo puedes editar cargas en proceso.' });
+      return;
+    }
+    this.editingId.set(load.id);
+    this.form.set({ vehiclePlate: load.vehiclePlate, mobilizerId: load.mobilizerId, loadingPlant: load.loadingPlant, remarks: load.remarks });
     this.dialogVisible.set(true);
   }
 
   saveLoad() {
     const f = this.form();
-    if (!f.vehiclePlate || !f.mobilizerId) {
-      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Selecciona vehículo y movilizador.' });
-      return;
-    }
-    this.submitting.set(true);
-    this.loadService.createLoad(f).subscribe({
-      next: () => {
-        this.submitting.set(false);
-        this.dialogVisible.set(false);
-        this.loadLoads();
-        this.messageService.add({ severity: 'success', summary: 'Carga iniciada', detail: 'Proceso de carga registrado' });
-      },
-      error: (e) => {
-        this.submitting.set(false);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+    const id = this.editingId();
+
+    if (id) {
+      // Actualizar
+      if (!f.loadingPlant && !f.remarks) {
+        this.messageService.add({ severity: 'warn', summary: 'Sin cambios', detail: 'Realiza al menos un cambio.' });
+        return;
       }
-    });
+      this.submitting.set(true);
+      this.loadService.updateLoad(id, f).subscribe({
+        next: () => {
+          this.submitting.set(false);
+          this.dialogVisible.set(false);
+          this.loadLoads();
+          this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Carga actualizada.' });
+        },
+        error: (e) => {
+          this.submitting.set(false);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+        }
+      });
+    } else {
+      // Crear
+      if (!f.vehiclePlate || !f.mobilizerId) {
+        this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Selecciona vehículo y movilizador.' });
+        return;
+      }
+      this.submitting.set(true);
+      this.loadService.createLoad(f).subscribe({
+        next: () => {
+          this.submitting.set(false);
+          this.dialogVisible.set(false);
+          this.loadLoads();
+          this.messageService.add({ severity: 'success', summary: 'Carga iniciada', detail: 'Proceso de carga registrado' });
+        },
+        error: (e) => {
+          this.submitting.set(false);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: parseApiError(e) });
+        }
+      });
+    }
   }
 
   confirmComplete(load: any) {

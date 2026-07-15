@@ -2,6 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface LoginResponse {
@@ -54,6 +55,21 @@ export class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY) ?? sessionStorage.getItem(this.TOKEN_KEY);
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.REFRESH_KEY) ?? sessionStorage.getItem(this.REFRESH_KEY);
+  }
+
+  refreshAccessToken(): Observable<LoginResponse> {
+    const refreshToken = this.getRefreshToken();
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/api/auth/refresh`, { refreshToken }).pipe(
+      tap(response => {
+        const store = localStorage.getItem(this.TOKEN_KEY) ? localStorage : sessionStorage;
+        store.setItem(this.TOKEN_KEY, response.accessToken);
+        if (response.refreshToken) store.setItem(this.REFRESH_KEY, response.refreshToken);
+      })
+    );
   }
 
   private loadUser(): LoginResponse['employee'] | null {

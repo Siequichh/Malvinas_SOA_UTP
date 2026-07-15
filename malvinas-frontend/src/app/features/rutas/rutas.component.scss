@@ -1,1 +1,166 @@
 :host { display: block; }
+
+/* DRV pending banner */
+.drv-pending-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg, rgba(217,119,6,0.12), rgba(217,119,6,0.06));
+  border: 1px solid rgba(217,119,6,0.35);
+  border-radius: 10px;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1rem;
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: rgba(217,119,6,0.35); }
+  50%       { border-color: rgba(217,119,6,0.7); }
+}
+
+.drv-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.drv-banner-icon {
+  font-size: 1.4rem;
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.drv-banner-title {
+  display: block;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--p-text-color);
+}
+
+.drv-banner-sub {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
+  margin-top: 1px;
+}
+
+.drv-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* DRV: QR card para orden activa */
+.qr-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.04));
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.qr-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.qr-card-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #10b981;
+}
+
+.qr-card-code {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.qr-card-vehicle {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.qr-code-wrapper {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 6px;
+  display: inline-flex;
+  line-height: 0;
+}
+
+.qr-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: #10b981;
+  text-decoration: none;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid rgba(16,185,129,0.35);
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  transition: background 0.15s;
+  &:hover { background: rgba(16,185,129,0.1); }
+}
+
+/* SEC: scan dialog */
+.scan-dialog-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.scan-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.scan-oc-label {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+}
+
+.scan-tag { font-size: 0.85rem; }
+
+.scan-hint {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  text-align: center;
+  margin: 0;
+}
+
+/* Status filter select */
+:host ::ng-deep .status-filter { min-width: 170px; }
+
+/* SEC: OC vigente badge inline */
+.oc-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(16,185,129,0.15);
+  color: #10b981;
+  border: 1px solid rgba(16,185,129,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}

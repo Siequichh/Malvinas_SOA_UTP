@@ -10,5 +10,9 @@ public interface DispatchService {
     List<DispatchResponse> findAll();
     List<DispatchResponse> findActive();
     DispatchResponse registerDeparture(Long id);
+    DispatchResponse accept(Long id, Long employeeId);
     DispatchResponse complete(Long id);
+    List<DispatchResponse> findByDriver(Long driverId);
+    DispatchResponse cancel(Long id);
+    DispatchResponse update(Long id, DispatchRequest request);
 }

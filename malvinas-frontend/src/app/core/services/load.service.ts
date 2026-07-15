@@ -12,6 +12,7 @@ export class LoadService {
   getActiveLoads() { return this.http.get<any[]>(`${this.apiUrl}/loads/active`); }
   getLoadById(id: number) { return this.http.get<any>(`${this.apiUrl}/loads/${id}`); }
   createLoad(data: any) { return this.http.post<any>(`${this.apiUrl}/loads`, data); }
+  updateLoad(id: number, data: any) { return this.http.put<any>(`${this.apiUrl}/loads/${id}`, data); }
   completeLoad(id: number) { return this.http.put<any>(`${this.apiUrl}/loads/${id}/complete`, {}); }
   cancelLoad(id: number) { return this.http.put<any>(`${this.apiUrl}/loads/${id}/cancel`, {}); }
 }

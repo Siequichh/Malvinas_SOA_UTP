@@ -33,9 +33,11 @@ public class SecurityConfig {
                     "/swagger-ui/**", "/swagger-ui.html",
                     "/api-docs/**", "/v3/api-docs/**"
                 ).permitAll()
-                // Lectura de vehiculos: acceso libre para llamadas internas (reportes-service)
+                // Acceso libre para llamadas internas de otros servicios (reportes, cargas, rutas)
                 .requestMatchers(HttpMethod.GET, "/api/vehicles/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/vehicle-types/**").permitAll()
+                // Cambio de estado: llamadas internas de cargas-service y rutas-service
+                .requestMatchers(HttpMethod.PUT, "/api/vehicles/*/status").permitAll()
                 // Gestion de vehiculos: solo administradores y supervisores
                 .requestMatchers("/api/vehicles/**").hasAnyRole("ADM", "SUP")
                 .requestMatchers("/api/vehicle-types/**").hasAnyRole("ADM", "SUP")

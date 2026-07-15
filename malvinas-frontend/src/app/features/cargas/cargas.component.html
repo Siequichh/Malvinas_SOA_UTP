@@ -5,6 +5,11 @@
   <div class="page-header">
     <h2 class="page-title">Control de Cargas</h2>
     <div class="page-actions">
+      <p-button icon="pi pi-refresh" severity="secondary" [text]="true"
+                [loading]="loading()" (onClick)="loadLoads()" title="Refrescar" />
+      <p-select [options]="statusOptions" optionLabel="label" optionValue="value"
+                [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)"
+                placeholder="Todos los estados" [showClear]="true" styleClass="status-filter" />
       <p-iconfield>
         <p-inputicon class="pi pi-search" />
         <input pInputText placeholder="Buscar vehículo, planta..."
@@ -17,7 +22,7 @@
     </div>
   </div>
 
-  <p-table #dt [value]="loads()" [loading]="loading()" [paginator]="true" [rows]="15"
+  <p-table #dt [value]="filteredLoads()" [loading]="loading()" [paginator]="true" [rows]="15"
            styleClass="p-datatable-sm" [stripedRows]="true"
            [globalFilterFields]="['vehiclePlate','loadingPlant']">
     <ng-template pTemplate="header">
@@ -25,28 +30,37 @@
         <th>ID</th>
         <th>Vehículo</th>
         <th>Planta</th>
+        <th>Observaciones</th>
         <th>Estado</th>
         <th>Inicio</th>
-        <th style="width:90px; text-align:center">Acciones</th>
+        <th style="width:120px; text-align:center">Acciones</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-l>
       <tr>
-        <td class="mono">#{{ l.id }}</td>
-        <td><strong class="mono">{{ l.vehiclePlate }}</strong></td>
-        <td>{{ l.loadingPlant }}</td>
-        <td>
+        <td data-label="ID" class="mono">#{{ l.id }}</td>
+        <td data-label="Vehículo"><strong class="mono">{{ l.vehiclePlate }}</strong></td>
+        <td data-label="Planta" class="hide-mobile">{{ l.loadingPlant }}</td>
+        <td data-label="Observaciones" class="hide-mobile text-sm">{{ l.remarks || '—' }}</td>
+        <td data-label="Estado">
           <p-tag [value]="getStatusLabel(l.statusCode)" [severity]="getStatusSeverity(l.statusCode)" />
         </td>
-        <td>{{ l.loadingStartTime | date:'dd/MM HH:mm' }}</td>
-        <td style="text-align:center">
+        <td data-label="Inicio" class="hide-mobile">{{ l.loadingStartTime | date:'dd/MM HH:mm' }}</td>
+        <td data-label="Acciones" style="text-align:center">
           @if (['ADM','SUP','MOV'].includes(userRole())) {
-            <p-button *ngIf="l.statusCode === '02'" icon="pi pi-check" severity="success"
-                      size="small" [rounded]="true" [text]="true" title="Completar carga"
-                      [disabled]="submitting()" (onClick)="confirmComplete(l)" />
-            <p-button *ngIf="l.statusCode === '01' || l.statusCode === '02'" icon="pi pi-times"
-                      severity="danger" size="small" [rounded]="true" [text]="true" title="Cancelar carga"
-                      [disabled]="submitting()" (onClick)="confirmCancel(l)" />
+            @if (l.statusCode === '02') {
+              <p-button icon="pi pi-pencil" severity="info"
+                        size="small" [rounded]="true" [text]="true" title="Editar carga"
+                        [disabled]="submitting()" (onClick)="openEdit(l)" />
+              <p-button icon="pi pi-check" severity="success"
+                        size="small" [rounded]="true" [text]="true" title="Completar carga"
+                        [disabled]="submitting()" (onClick)="confirmComplete(l)" />
+            }
+            @if (l.statusCode === '01' || l.statusCode === '02') {
+              <p-button icon="pi pi-times"
+                        severity="danger" size="small" [rounded]="true" [text]="true" title="Cancelar carga"
+                        [disabled]="submitting()" (onClick)="confirmCancel(l)" />
+            }
           }
         </td>
       </tr>
@@ -56,23 +70,30 @@
     </ng-template>
   </p-table>
 
-  <!-- Nueva Carga Dialog -->
+  <!-- Nueva / Editar Carga Dialog -->
   <p-dialog [visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)"
-            header="Iniciar Proceso de Carga" [modal]="true"
+            [header]="editingId() ? 'Editar Carga' : 'Iniciar Proceso de Carga'" [modal]="true"
             [resizable]="false" [style]="{ width: '480px' }">
     <div class="flex flex-column gap-3 p-3">
-      <div class="flex flex-column gap-2">
-        <label>Vehículo Disponible *</label>
-        <p-select [options]="availableVehicles()" optionLabel="licensePlate" optionValue="licensePlate"
-                  [ngModel]="form().vehiclePlate" (ngModelChange)="updateForm('vehiclePlate', $event)"
-                  placeholder="Seleccionar vehículo" styleClass="w-full" />
-      </div>
-      <div class="flex flex-column gap-2">
-        <label>Movilizador *</label>
-        <p-select [options]="mobilizers()" optionLabel="fullName" optionValue="id"
-                  [ngModel]="form().mobilizerId" (ngModelChange)="updateForm('mobilizerId', $event)"
-                  placeholder="Seleccionar movilizador" styleClass="w-full" />
-      </div>
+      @if (!editingId()) {
+        <div class="flex flex-column gap-2">
+          <label>Vehículo Disponible *</label>
+          <p-select [options]="availableVehicles()" optionLabel="licensePlate" optionValue="licensePlate"
+                    [ngModel]="form().vehiclePlate" (ngModelChange)="updateForm('vehiclePlate', $event)"
+                    placeholder="Seleccionar vehículo" styleClass="w-full" />
+        </div>
+        <div class="flex flex-column gap-2">
+          <label>Movilizador *</label>
+          <p-select [options]="mobilizers()" optionLabel="fullName" optionValue="id"
+                    [ngModel]="form().mobilizerId" (ngModelChange)="updateForm('mobilizerId', $event)"
+                    placeholder="Seleccionar movilizador" styleClass="w-full" />
+        </div>
+      } @else {
+        <div class="flex flex-column gap-2">
+          <label>Vehículo</label>
+          <input pInputText [ngModel]="form().vehiclePlate" [disabled]="true" />
+        </div>
+      }
       <div class="flex flex-column gap-2">
         <label>Planta de Carga</label>
         <input pInputText [ngModel]="form().loadingPlant"
@@ -86,7 +107,8 @@
     </div>
     <ng-template pTemplate="footer">
       <p-button label="Cancelar" severity="secondary" (onClick)="dialogVisible.set(false)" />
-      <p-button label="Iniciar Carga" icon="pi pi-play" [loading]="submitting()" [disabled]="submitting()" (onClick)="saveLoad()" />
+      <p-button [label]="editingId() ? 'Guardar cambios' : 'Iniciar Carga'" [icon]="editingId() ? 'pi pi-save' : 'pi pi-play'"
+                [loading]="submitting()" [disabled]="submitting()" (onClick)="saveLoad()" />
     </ng-template>
   </p-dialog>
 </div>

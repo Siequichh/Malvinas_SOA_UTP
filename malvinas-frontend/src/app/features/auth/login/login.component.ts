@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { ROLE_HOME } from '../../../core/guards/auth.guard';
 import { parseLoginError } from '../../../core/utils/error.utils';
 import { saveCredentials, loadCredentials, clearCredentials } from '../../../core/utils/credential-store';
@@ -28,7 +29,7 @@ export class LoginComponent implements OnInit {
   loading      = signal(false);
   error        = signal('');
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private notificationService: NotificationService, private router: Router) {}
 
   async ngOnInit() {
     const creds = await loadCredentials();
@@ -51,7 +52,8 @@ export class LoginComponent implements OnInit {
       clearCredentials();
     }
     this.authService.login(this.dni(), this.password(), this.rememberMe()).subscribe({
-      next: () => {
+      next: async () => {
+        await this.notificationService.requestPermission();
         const role = this.authService.userRole();
         this.router.navigate([ROLE_HOME[role] ?? '/dashboard']);
       },

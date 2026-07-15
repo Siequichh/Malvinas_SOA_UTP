@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -44,8 +46,23 @@ public class DispatchController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dispatchService.create(request));
     }
 
+    @GetMapping("/pending")
+    @Operation(summary = "Get pending dispatches (SCHEDULED) assigned to a driver")
+    public ResponseEntity<List<DispatchResponse>> findByDriver(@RequestParam Long driverId) {
+        return ResponseEntity.ok(dispatchService.findByDriver(driverId));
+    }
+
+    @PostMapping("/{id}/accept")
+    @PreAuthorize("hasRole('DRV')")
+    @Operation(summary = "Driver accepts dispatch — generates Loading Order Code and sets ON_ROUTE")
+    public ResponseEntity<DispatchResponse> accept(@PathVariable Long id,
+                                                    @AuthenticationPrincipal Object principal) {
+        Long employeeId = Long.parseLong(principal.toString());
+        return ResponseEntity.ok(dispatchService.accept(id, employeeId));
+    }
+
     @PostMapping("/{id}/departure")
-    @Operation(summary = "Register vehicle departure — generates unique Loading Order Code")
+    @Operation(summary = "Register vehicle departure — generates unique Loading Order Code (SUP/ADM override)")
     public ResponseEntity<DispatchResponse> registerDeparture(@PathVariable Long id) {
         return ResponseEntity.ok(dispatchService.registerDeparture(id));
     }
@@ -54,5 +71,20 @@ public class DispatchController {
     @Operation(summary = "Complete dispatch — vehicle has returned to base")
     public ResponseEntity<DispatchResponse> complete(@PathVariable Long id) {
         return ResponseEntity.ok(dispatchService.complete(id));
+    }
+
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('SUP','ADM','DRV')")
+    @Operation(summary = "Cancel a SCHEDULED dispatch")
+    public ResponseEntity<DispatchResponse> cancel(@PathVariable Long id) {
+        return ResponseEntity.ok(dispatchService.cancel(id));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUP','ADM')")
+    @Operation(summary = "Update a SCHEDULED dispatch")
+    public ResponseEntity<DispatchResponse> update(@PathVariable Long id,
+                                                    @Valid @RequestBody DispatchRequest request) {
+        return ResponseEntity.ok(dispatchService.update(id, request));
     }
 }
