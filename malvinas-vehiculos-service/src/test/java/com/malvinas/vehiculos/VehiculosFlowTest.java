@@ -43,7 +43,7 @@ class VehiculosFlowTest {
 
         mvc.perform(put("/api/vehicles/" + plate + "/status")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"newStatusCode":"02","reason":"test"}""")
+                .content("{\"newStatusCode\":\"02\",\"reason\":\"test\"}")
                 .header("X-Employee-Id", "1")
                 .header("X-Employee-Role", "ADM"))
            .andExpect(status().isOk());

@@ -31,7 +31,7 @@ class CargasFlowTest {
 
         String response = mvc.perform(post("/api/loads")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"vehiclePlate":"TST-001","mobilizerId":1}""")
+                .content("{\"vehiclePlate\":\"TST-001\",\"mobilizerId\":1}")
                 .header("X-Employee-Id", "6")
                 .header("X-Employee-Role", "MOV"))
            .andExpect(status().isCreated())

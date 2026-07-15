@@ -37,7 +37,7 @@ class RutasFlowTest {
 
         String response = mvc.perform(post("/api/dispatches")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"vehiclePlate":"TST-001","driverId":%d}""".formatted(DRIVER_ID))
+                .content("{\"vehiclePlate\":\"TST-001\",\"driverId\":" + DRIVER_ID + "}")
                 .header("X-Employee-Id", "3")
                 .header("X-Employee-Role", "SUP"))
            .andExpect(status().isCreated())
