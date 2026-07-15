@@ -41,16 +41,17 @@ public class DispatchServiceImpl implements DispatchService {
     }
 
     @PostConstruct
-    @Transactional(readOnly = true)
     public void initSequence() {
-        dispatchRepo.findMaxLoadingOrderCode().ifPresent(code -> {
-            try {
-                String[] parts = code.split("-");
-                if (parts.length == 3) {
-                    sequence.set(Integer.parseInt(parts[2]) + 1);
-                }
-            } catch (Exception ignored) {}
-        });
+        try {
+            dispatchRepo.findMaxLoadingOrderCode().ifPresent(code -> {
+                try {
+                    String[] parts = code.split("-");
+                    if (parts.length == 3) sequence.set(Integer.parseInt(parts[2]) + 1);
+                } catch (Exception ignored) {}
+            });
+        } catch (Exception ignored) {
+            // table may not exist yet on first deploy; sequence starts at 1
+        }
     }
 
     @Override
