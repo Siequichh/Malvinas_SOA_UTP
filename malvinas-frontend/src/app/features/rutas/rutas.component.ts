@@ -411,7 +411,7 @@ export class RutasComponent implements OnInit, OnDestroy {
     };
     try {
       this.html5QrCode = new Html5Qrcode('qr-reader');
-      await this.html5QrCode.start({ facingMode: 'environment' }, { fps: 15 }, onSuccess, () => {});
+      await this.html5QrCode.start({ facingMode: 'environment' }, { fps: 15, qrbox: { width: 250, height: 250 } }, onSuccess, () => {});
     } catch {
       // facingMode constraint failed — stop partial init and try by camera ID
       try { await this.html5QrCode?.stop(); } catch {}
@@ -420,7 +420,7 @@ export class RutasComponent implements OnInit, OnDestroy {
         const cameras = await Html5Qrcode.getCameras();
         if (cameras?.length) {
           this.html5QrCode = new Html5Qrcode('qr-reader');
-          await this.html5QrCode.start(cameras[cameras.length - 1].id, { fps: 15 }, onSuccess, () => {});
+          await this.html5QrCode.start(cameras[cameras.length - 1].id, { fps: 15, qrbox: { width: 250, height: 250 } }, onSuccess, () => {});
         }
       } catch { /* camera not available */ }
     }
