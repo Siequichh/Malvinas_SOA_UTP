@@ -16,7 +16,7 @@ spring:
       connection-init-sql: SELECT 1
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -25,11 +25,7 @@ spring:
         jdbc:
           time_zone: America/Bogota
   flyway:
-    enabled: true
-    schemas: staff
-    default-schema: staff
-    baseline-on-migrate: true
-    baseline-version: 0
+    enabled: false
   sql:
     init:
       mode: never
