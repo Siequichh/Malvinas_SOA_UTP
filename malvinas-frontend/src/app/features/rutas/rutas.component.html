@@ -212,7 +212,7 @@
             header="Verificar Orden de Carga" [modal]="true"
             [resizable]="false" [style]="{ width: '360px' }">
     <div class="scan-dialog-body">
-      <div id="qr-reader" style="width:300px; margin:0 auto"></div>
+      <div id="qr-reader" style="width:100%; max-width:300px"></div>
       @if (scannedOC()) {
         <div class="scan-result">
           <span class="scan-oc-label">OC escaneada:</span>

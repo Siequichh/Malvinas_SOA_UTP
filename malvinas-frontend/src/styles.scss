@@ -231,8 +231,13 @@ a {
 /* ── Touch targets ────────────────────────────────────── */
 @media (max-width: 768px) {
   .p-button.p-button-sm { min-height: 36px; min-width: 36px; }
-  .search-input { width: 140px !important; }
   .page-header { gap: 0.5rem; }
+  .page-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .search-input { flex: 1 !important; min-width: 120px; width: auto !important; }
+  .status-filter { flex: 1; min-width: 130px; }
 }
 
 /* ── Scrollbar ───────────────────────────────────────── */

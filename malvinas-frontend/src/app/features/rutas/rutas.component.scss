@@ -147,7 +147,10 @@
 }
 
 /* Status filter select */
-:host ::ng-deep .status-filter { min-width: 170px; }
+:host ::ng-deep .status-filter {
+  min-width: 170px;
+  @media (max-width: 768px) { min-width: 0; }
+}
 
 /* SEC: OC vigente badge inline */
 .oc-badge {
