@@ -5,3 +5,8 @@ spring:
     import: optional:file:.env[.properties]
   profiles:
     active: ${ENVIRONMENT:dev}
+
+# Secreto compartido gateway <-> servicios: rechaza llamadas que no pasen por el gateway.
+# En Render lo genera el blueprint (INTERNAL_KEY); el default solo sirve en dev/test.
+internal:
+  key: ${INTERNAL_KEY:dev-internal-key}

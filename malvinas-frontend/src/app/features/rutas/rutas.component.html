@@ -34,7 +34,7 @@
           <span class="qr-card-vehicle">Vehículo: {{ active.vehiclePlate }}</span>
         </div>
         <div class="qr-code-wrapper">
-          <qrcode [qrdata]="active.loadingOrderCode" [width]="160" [margin]="2"
+          <qrcode [qrdata]="active.loadingOrderCode" [width]="200" [margin]="4" errorCorrectionLevel="M"
                   colorDark="#000000" colorLight="#ffffff"
                   (qrCodeURL)="onQrCodeURL($event)" />
         </div>
@@ -222,9 +222,17 @@
       @if (scannedResult(); as res) {
         <p-tag [severity]="res.valid ? 'success' : 'danger'" [value]="res.message" styleClass="scan-tag" />
       }
-      @if (!scannedOC()) {
+      @if (scanError(); as msg) {
+        <p class="scan-error" role="alert">{{ msg }}</p>
+      } @else if (!scannedOC()) {
         <p class="scan-hint">Apunta la cámara al código QR del conductor</p>
       }
+      <!-- Respaldo si la cámara falla o el QR no se lee (reflejo, pantalla rota, sin permiso) -->
+      <form class="scan-manual" (ngSubmit)="verifyOC(manualOC())">
+        <input pInputText name="manualOC" [ngModel]="manualOC()" (ngModelChange)="manualOC.set($event)"
+               placeholder="OC-AAAAMMDD-0001" autocomplete="off" class="mono" />
+        <p-button type="submit" label="Verificar" severity="secondary" [disabled]="!manualOC().trim()" />
+      </form>
     </div>
     <ng-template pTemplate="footer">
       <p-button label="Cerrar" severity="secondary" (onClick)="closeScanDialog()" />

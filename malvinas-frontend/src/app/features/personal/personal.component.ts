@@ -69,6 +69,10 @@ export class PersonalComponent implements OnInit {
       this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Completa DNI, nombre, apellido y rol.' });
       return;
     }
+    if (!/^\d{8}$/.test(f.dni)) {
+      this.messageService.add({ severity: 'warn', summary: 'DNI inválido', detail: 'El DNI debe tener 8 dígitos numéricos.' });
+      return;
+    }
     this.submitting.set(true);
     const obs = this.editMode()
       ? this.employeeService.updateEmployee(this.selectedEmployee().id, f)

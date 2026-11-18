@@ -54,7 +54,8 @@
       <div class="grid">
         <div class="col-6 flex flex-column gap-2">
           <label>DNI *</label>
-          <input pInputText [ngModel]="form().dni" (ngModelChange)="updateForm('dni', $event)" [disabled]="editMode()" />
+          <input pInputText [ngModel]="form().dni" (ngModelChange)="updateForm('dni', $event)" [disabled]="editMode()"
+                 inputmode="numeric" maxlength="8" pattern="\d{8}" placeholder="8 dígitos" />
         </div>
         <div class="col-6 flex flex-column gap-2">
           <label>Rol *</label>

@@ -1,488 +1,309 @@
-:host { display: block; height: 100vh; }
+// Login — "porton de despacho": foto del patio + planilla de ingreso.
+// Un solo acento (ambar de seguridad industrial); el resto es tinta y papel.
 
-.login-page {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
+:host {
+  --ink:        #16191c;
+  --ink-2:      #2a2f34;
+  --paper:      #f3f1ec;
+  --paper-2:    #e6e3dc;
+  --line:       #c9c5bb;
+  --muted:      #5f646a;
+  --amber:      #f2b705;
+  --danger:     #b42318;
+  --danger-bg:  #fbeae8;
+  --focus:      #16191c;
+  --cond: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  display: block;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
 }
 
-// ── Brand Panel ──────────────────────────────────────────────
-.brand-panel {
+:host-context(.app-dark) {
+  --paper:     #121416;
+  --paper-2:   #1c1f22;
+  --line:      #33383d;
+  --ink:       #ecebe6;
+  --ink-2:     #c9c8c2;
+  --muted:     #959a9f;
+  --danger:    #ff8a7a;
+  --danger-bg: #2b1513;
+  --focus:     #f2b705;
+}
+
+.gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(380px, 1fr);
+  min-height: 100dvh;
+}
+
+// ── Patio (foto) ─────────────────────────────────────────────
+.yard {
   position: relative;
-  flex: 0 0 54%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 3.5rem 4rem;
-  // Uniform overlay — avoids harsh diagonal cut at the panel boundary
+  padding: 28px 40px 44px;
+  color: #f3f1ec;
   background:
-    linear-gradient(to right, rgba(4,10,20,0.83) 0%, rgba(4,10,20,0.83) 55%, rgba(4,10,20,0.96) 100%),
-    url('/assets/login-fleet.jpg') center / cover no-repeat;
-  background-color: #040a14;
+    linear-gradient(180deg, rgba(10, 12, 14, .55) 0%, rgba(10, 12, 14, .05) 35%, rgba(10, 12, 14, .82) 100%),
+    url('/assets/login-fleet.jpg') center 40% / cover no-repeat;
+  filter: saturate(.55);
   overflow: hidden;
 
-  // Right-edge alpha fade → blends seamlessly into the form panel background
+  // franja de seguridad: el unico detalle "industrial", al pie de la foto
   &::after {
     content: '';
     position: absolute;
-    top: 0; right: 0; bottom: 0;
-    width: 180px;
-    background: linear-gradient(to right, transparent, var(--p-surface-ground));
-    pointer-events: none;
-    z-index: 3;
+    inset: auto 0 0 0;
+    height: 10px;
+    background: repeating-linear-gradient(-45deg, var(--amber) 0 14px, #16191c 14px 28px);
   }
 }
 
-// Glowing orbs for depth
-.bp-orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-
-  &--1 {
-    width: 700px; height: 700px;
-    top: -250px; right: -200px;
-    background: radial-gradient(circle, rgba(16,185,129,0.11) 0%, transparent 60%);
-  }
-  &--2 {
-    width: 500px; height: 500px;
-    bottom: -200px; left: -120px;
-    background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 60%);
-  }
-}
-
-// Dot-grid background texture
-.bp-grid {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, rgba(16,185,129,0.18) 1px, transparent 1px);
-  background-size: 30px 30px;
-  pointer-events: none;
-  mask-image: linear-gradient(to bottom right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 100%);
-  -webkit-mask-image: linear-gradient(to bottom right, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 100%);
-}
-
-.bp-body {
-  position: relative;
-  z-index: 1;
+.yard-top {
   display: flex;
-  flex-direction: column;
-  gap: 2.25rem;
-}
-
-.bp-logo {
-  width: 74px; height: 74px;
-  background: rgba(16,185,129,0.09);
-  border: 1.5px solid rgba(16,185,129,0.28);
-  border-radius: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 40px rgba(16,185,129,0.12), inset 0 1px 0 rgba(255,255,255,0.05);
-
-  .pi { font-size: 2.1rem; color: #10b981; }
-}
-
-.bp-title {
-  font-size: 3.25rem;
-  font-weight: 900;
-  color: #f8fafc;
-  line-height: 1.02;
-  letter-spacing: -1.5px;
-  margin: 0;
-}
-
-.bp-sub {
-  font-size: 0.87rem;
-  color: rgba(255,255,255,0.4);
-  margin: 0.6rem 0 0;
-  line-height: 1.65;
-  max-width: 340px;
-}
-
-// Stats row
-.bp-stats {
-  display: flex;
-  align-items: center;
-  gap: 1.75rem;
-  padding: 1.15rem 1.75rem;
-  background: rgba(16,185,129,0.055);
-  border: 1px solid rgba(16,185,129,0.15);
-  border-radius: 16px;
-  width: fit-content;
-}
-
-.bps-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  .bps-n {
-    font-size: 1.9rem;
-    font-weight: 800;
-    color: #10b981;
-    line-height: 1;
-    letter-spacing: -1px;
-  }
-  .bps-l {
-    font-size: 0.65rem;
-    color: rgba(255,255,255,0.36);
-    text-transform: uppercase;
-    letter-spacing: 0.9px;
-    margin-top: 0.2rem;
-  }
-}
-
-.bps-sep {
-  width: 1px;
-  height: 38px;
-  background: rgba(16,185,129,0.18);
-}
-
-// Feature list
-.bp-features {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.78rem;
-
-  li {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    color: rgba(255,255,255,0.5);
-    font-size: 0.87rem;
-
-    .pi { color: #10b981; font-size: 0.93rem; flex-shrink: 0; }
-  }
-}
-
-.bp-footer {
-  position: relative;
-  z-index: 1;
-  font-size: 0.65rem;
-  color: rgba(255,255,255,0.15);
-  letter-spacing: 1px;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .04em;
   text-transform: uppercase;
 }
 
-// ── Form Panel ───────────────────────────────────────────────
-.form-panel {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2.5rem;
-  background: var(--p-surface-ground);
-  position: relative;
+.yard-site { padding-top: 4px; opacity: .85; }
 
-  // Ambient glow centered on the card
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 65% 50% at 50% 50%, rgba(16,185,129,0.04) 0%, transparent 70%);
-    pointer-events: none;
-  }
+.yard-clock {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  strong { font-size: 28px; font-weight: 500; letter-spacing: 0; line-height: 1; }
+  span   { opacity: .75; }
 }
 
-// ── Form Card ────────────────────────────────────────────────
-.form-card {
-  width: 100%;
-  max-width: 400px;
-  position: relative;
-  z-index: 1;
-  background: var(--p-surface-card);
-  border: 1px solid var(--p-surface-border);
-  border-radius: 20px;
-  padding: 2.75rem 2.5rem;
-  box-shadow:
-    0 2px 4px rgba(0,0,0,0.06),
-    0 8px 24px rgba(0,0,0,0.12),
-    0 24px 48px rgba(0,0,0,0.14),
-    0 0 0 1px rgba(255,255,255,0.025);
+.yard-brand { max-width: 560px; }
 
-  // Green top-edge highlight (premium card treatment)
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 2.5rem; right: 2.5rem; height: 1px;
-    background: linear-gradient(to right, transparent, rgba(16,185,129,0.5), transparent);
-    pointer-events: none;
-  }
-}
-
-.fc-badge {
+.yard-kicker {
   display: inline-block;
-  padding: 0.26rem 0.8rem;
-  background: rgba(16,185,129,0.08);
-  border: 1px solid rgba(16,185,129,0.20);
-  border-radius: 20px;
-  font-size: 0.595rem;
-  font-weight: 700;
-  color: #10b981;
-  letter-spacing: 1.8px;
+  margin-bottom: 14px;
+  padding-left: 12px;
+  border-left: 3px solid var(--amber);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
   text-transform: uppercase;
-  margin-bottom: 1.65rem;
 }
 
-.fc-mobile-logo {
-  display: none;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 1.5rem;
-  color: #10b981;
-  font-size: 0.95rem;
+.yard-name {
+  margin: 0;
+  font-family: var(--cond);
   font-weight: 700;
-
-  .pi { font-size: 1.5rem; }
+  font-size: clamp(56px, 8.5vw, 120px);
+  line-height: .86;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
 }
 
-.fc-header {
-  margin-bottom: 1.85rem;
+// ── Mesa (formulario) ────────────────────────────────────────
+.desk {
+  display: flex;
+  align-items: center;
+  padding: 48px clamp(24px, 5vw, 72px);
+  border-left: 1px solid var(--line);
+}
+
+.desk-inner { width: 100%; max-width: 380px; }
+
+.desk-head {
+  margin-bottom: 32px;
 
   h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--p-text-color);
-    margin: 0 0 0.35rem;
-    letter-spacing: -0.5px;
-  }
-
-  p {
-    font-size: 0.84rem;
-    color: var(--p-text-muted-color);
-    margin: 0;
-    line-height: 1.55;
-  }
-}
-
-.fc-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-}
-
-.fc-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.38rem;
-
-  label {
-    font-size: 0.72rem;
+    margin: 0 0 8px;
+    font-family: var(--cond);
+    font-size: 34px;
     font-weight: 600;
-    color: var(--p-text-muted-color);
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
+    line-height: 1.05;
+    letter-spacing: -.01em;
   }
+  p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
 }
 
-// ── Custom Password Field ─────────────────────────────────────
-.fc-pass-wrapper {
+
+.desk-form { display: grid; gap: 20px; }
+
+.field { display: grid; gap: 6px; }
+
+.field-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper-2);
+  color: var(--ink);
+  font: 500 16px/1 'IBM Plex Sans', sans-serif; // 16px evita el zoom en iOS
+  transition: border-color .15s, box-shadow .15s, background .15s;
+
+  &::placeholder { color: var(--muted); opacity: .6; font-weight: 400; }
+  &:hover { border-color: var(--muted); }
+  &:focus {
+    outline: none;
+    border-color: var(--focus);
+    box-shadow: inset 0 -3px 0 var(--amber);
+    background: var(--paper);
+  }
+  &[aria-invalid='true'] { border-color: var(--danger); }
+}
+
+.field-input--mono { font-family: var(--mono); letter-spacing: .14em; }
+
+.field-pass {
   position: relative;
-  display: flex;
-  align-items: center;
-
-  .fc-pass-icon {
-    position: absolute;
-    left: 0.85rem;
-    font-size: 0.83rem;
-    color: var(--p-text-muted-color);
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  // Override PrimeNG input padding for icons
-  .p-inputtext {
-    padding-left: 2.4rem !important;
-    padding-right: 2.85rem !important;
-    width: 100%;
-  }
-
-  .fc-pass-toggle {
-    position: absolute;
-    right: 0.55rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px; height: 30px;
-    background: none;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
-    color: var(--p-text-muted-color);
-    transition: color 0.15s ease, background 0.15s ease;
-    z-index: 1;
-
-    &:hover {
-      color: var(--p-text-color);
-      background: rgba(255,255,255,0.06);
-    }
-
-    .pi { font-size: 0.88rem; }
-  }
+  display: block;
+  .field-input { padding-right: 76px; }
 }
 
-// ── Remember me + Forgot password ────────────────────────────
-.fc-row-inline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+.field-reveal {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  bottom: 6px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 12px var(--mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  &:hover { color: var(--ink); background: var(--paper); }
+  &:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 }
 
-.fc-checkbox-label {
+.remember {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink-2);
   cursor: pointer;
   user-select: none;
 
-  span {
-    font-size: 0.8rem;
-    color: var(--p-text-muted-color);
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--ink);
+    cursor: pointer;
   }
 }
 
-.fc-forgot {
-  font-size: 0.8rem;
-  color: #10b981;
-  text-decoration: none;
-  opacity: 0.78;
-  transition: opacity 0.15s ease;
-  white-space: nowrap;
-  flex-shrink: 0;
-
-  &:hover { opacity: 1; }
-}
-
-// ── Error state ───────────────────────────────────────────────
-.fc-error {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.75rem 1rem;
-  background: rgba(239,68,68,0.07);
-  border: 1px solid rgba(239,68,68,0.18);
-  border-left: 3px solid #ef4444;
-  border-radius: 9px;
-  color: #ef4444;
-  font-size: 0.83rem;
-  line-height: 1.45;
-
-  i { font-size: 0.88rem; flex-shrink: 0; margin-top: 1px; }
-}
-
-// ── Footer row (security badge + help link) ───────────────────
-.fc-footer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--p-surface-border);
-}
-
-.fc-security {
-  display: flex;
-  align-items: center;
-  gap: 0.38rem;
-  font-size: 0.67rem;
-  color: var(--p-text-muted-color);
-  flex-shrink: 0;
-
-  .pi { color: #10b981; font-size: 0.7rem; }
-}
-
-.fc-help {
-  font-size: 0.73rem;
-  color: var(--p-text-muted-color);
+.alert {
   margin: 0;
-  text-align: right;
-
-  a {
-    color: #10b981;
-    text-decoration: none;
-    opacity: 0.78;
-    transition: opacity 0.15s;
-    &:hover { opacity: 1; }
-  }
+  padding: 10px 12px;
+  border-left: 3px solid var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.4;
 }
 
-// ── PrimeNG deep overrides (scoped to login) ──────────────────
-:host ::ng-deep {
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--cond);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .15s, transform .05s;
 
-  // Shadcn-style focus ring on all inputs
-  .fc-form .p-inputtext {
-    border-radius: 9px;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-
-    &:not(:disabled):focus {
-      border-color: rgba(16, 185, 129, 0.55) !important;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.10) !important;
-      outline: none !important;
-    }
-  }
-
-  // Submit button — spring bounce + glow on hover
-  .fc-form .p-button {
-    height: 44px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 0.875rem;
-    letter-spacing: 0.01em;
-    transition:
-      transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
-      box-shadow 0.22s ease !important;
-
-    &:not(.p-disabled):hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 8px 28px rgba(16, 185, 129, 0.34) !important;
-    }
-
-    &:not(.p-disabled):active {
-      transform: translateY(0) scale(0.985) !important;
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
-      transition-duration: 0.08s !important;
-    }
-  }
-
-  // Compact checkbox
-  .fc-checkbox-label .p-checkbox {
-    width: 16px; height: 16px;
-
-    .p-checkbox-box {
-      width: 16px; height: 16px;
-      border-radius: 5px;
-      transition: border-color 0.15s, background 0.15s;
-    }
-  }
+  &:hover:not(:disabled) { background: var(--ink-2); }
+  &:active:not(:disabled) { transform: translateY(1px); }
+  &:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+  &:disabled { opacity: .7; cursor: progress; }
 }
 
-// ── Responsive ───────────────────────────────────────────────
+:host-context(.app-dark) .submit { background: var(--amber); color: #16191c; }
+:host-context(.app-dark) .submit:hover:not(:disabled) { background: #ffc81f; }
+:host-context(.app-dark) .remember input { accent-color: var(--amber); }
+
+.desk-foot {
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  p { margin: 0; }
+}
+
+.desk-legal {
+  margin-top: 6px !important;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  opacity: .8;
+}
+
+// ── Entrada: un solo reveal escalonado ───────────────────────
+@media (prefers-reduced-motion: no-preference) {
+  .yard-brand, .desk-head, .desk-form, .desk-foot {
+    animation: rise .5s cubic-bezier(.2, .7, .2, 1) both;
+  }
+  .yard-brand { animation-delay: .05s; }
+  .desk-head  { animation-delay: .12s; }
+  .desk-form  { animation-delay: .2s; }
+  .desk-foot  { animation-delay: .28s; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+// ── Tablet / movil ───────────────────────────────────────────
 @media (max-width: 900px) {
-  .brand-panel    { display: none; }
-  .form-panel     { padding: 1.5rem; background: var(--p-surface-ground); }
-  .fc-mobile-logo { display: flex; }
+  .gate { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
 
-  .form-card {
-    padding: 2rem 1.75rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  .yard {
+    min-height: 220px;
+    padding: 18px 20px 28px;
   }
+  .yard-name  { font-size: clamp(44px, 13vw, 72px); }
+  .yard-clock strong { font-size: 22px; }
+
+  .desk {
+    align-items: flex-start;
+    padding: 32px 20px 40px;
+    border-left: 0;
+  }
+  .desk-inner { max-width: 440px; margin: 0 auto; }
 }
 
 @media (max-width: 480px) {
-  .form-panel { padding: 1rem; }
-
-  .form-card { padding: 1.75rem 1.25rem; border-radius: 14px; }
-
-  .fc-row-inline  { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
-  .fc-forgot      { align-self: flex-end; margin-top: -0.35rem; }
-
-  .fc-footer-row  { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-  .fc-help        { text-align: left; }
+  .yard { min-height: 180px; }
+  .yard-site, .yard-kicker { display: none; }
+  .desk-head h2 { font-size: 28px; }
 }

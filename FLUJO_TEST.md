@@ -253,11 +253,36 @@ mvn test -pl malvinas-api-gateway
 
 ## Remember-me
 
-1. Login con cualquier cuenta → activar checkbox "Recordar mis datos"
-2. Cerrar el navegador completamente
-3. Abrir de nuevo http://localhost:4200
-4. ✅ DNI y contraseña pre-cargados (cifrados en localStorage)
-5. Login sin remember-me → ✅ sesión en sessionStorage, no persiste tras cierre
+1. Login con cualquier cuenta → activar "Recordar mi DNI en este equipo"
+2. Cerrar el navegador completamente y abrir de nuevo http://localhost:4200
+3. ✅ Solo el **DNI** viene pre-cargado. La contraseña **nunca** se guarda en el navegador
+   (antes se guardaba cifrada con una clave fija en el JS; ahora se borra `malvinas_saved_creds` al abrir el login)
+4. Login sin remember-me → ✅ sesión en sessionStorage, no persiste tras cierre
+
+---
+
+## Seguridad: acceso directo a servicios (sin pasar por el gateway)
+
+```bash
+# Debe dar 401 aunque se falsifique el rol: falta X-Internal-Key (solo lo pone el gateway)
+curl -s -o /dev/null -w "%{http_code}
+" http://localhost:8081/api/employees -H "X-Employee-Id: 1" -H "X-Employee-Role: ADM"
+# El endpoint interno con hash de contraseña ya no es alcanzable: 401 directo, 404 por el gateway
+curl -s -o /dev/null -w "%{http_code}
+" http://localhost:8081/api/employees/auth/by-dni/00000001
+curl -s -o /dev/null -w "%{http_code}
+" http://localhost:8080/api/employees/auth/by-dni/00000001 -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## QR de la Orden de Carga
+
+1. DRV acepta un despacho → ve su QR (botón "Descargar QR")
+2. SEC → Rutas → **Escanear QR** → apunta al QR del celular del conductor
+3. ✅ "OC válida — Vehículo XXX" aunque el SEC haya abierto la pantalla antes de que el DRV aceptara
+   (se valida contra el backend en el momento del escaneo)
+4. Sin cámara / sin permiso → ✅ mensaje de error visible y campo para **escribir la OC a mano**
 
 ---
 

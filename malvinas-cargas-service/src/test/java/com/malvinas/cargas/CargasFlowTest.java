@@ -4,7 +4,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.malvinas.cargas.infrastructure.client.VehiculosServiceClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -32,6 +32,7 @@ class CargasFlowTest {
         String response = mvc.perform(post("/api/loads")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"vehiclePlate\":\"TST-001\",\"mobilizerId\":1}")
+                .header("X-Internal-Key", "dev-internal-key")
                 .header("X-Employee-Id", "6")
                 .header("X-Employee-Role", "MOV"))
            .andExpect(status().isCreated())
@@ -40,6 +41,7 @@ class CargasFlowTest {
         long id = ((Number) JsonPath.read(response, "$.id")).longValue();
 
         mvc.perform(put("/api/loads/" + id + "/complete")
+                .header("X-Internal-Key", "dev-internal-key")
                 .header("X-Employee-Id", "6")
                 .header("X-Employee-Role", "MOV"))
            .andExpect(status().isOk());

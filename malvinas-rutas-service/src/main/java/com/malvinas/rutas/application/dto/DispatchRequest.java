@@ -1,5 +1,6 @@
 package com.malvinas.rutas.application.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalTime;
@@ -14,5 +15,5 @@ public record DispatchRequest(
     String priority,
     LocalTime scheduledDepartureTime,
     String remarks,
-    List<DispatchPointRequest> points
+    @Valid List<DispatchPointRequest> points
 ) {}

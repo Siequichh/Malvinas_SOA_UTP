@@ -1,132 +1,76 @@
-<div class="login-page">
+<main class="gate">
 
-  <!-- ── Left: brand panel ─────────────────────────────────── -->
-  <div class="brand-panel">
-    <div class="bp-orb bp-orb--1"></div>
-    <div class="bp-orb bp-orb--2"></div>
-    <div class="bp-grid"></div>
-
-    <div class="bp-body">
-      <div class="bp-logo">
-        <i class="pi pi-truck"></i>
-      </div>
-
-      <div>
-        <h1 class="bp-title">Grupo<br>Malvina</h1>
-        <p class="bp-sub">Control integral de carga y despacho vehicular desde Huachipa, Lima</p>
-      </div>
-
-      <div class="bp-stats">
-        <div class="bps-item">
-          <span class="bps-n">75</span>
-          <span class="bps-l">Unidades</span>
-        </div>
-        <div class="bps-sep"></div>
-        <div class="bps-item">
-          <span class="bps-n">500+</span>
-          <span class="bps-l">Km / día</span>
-        </div>
-        <div class="bps-sep"></div>
-        <div class="bps-item">
-          <span class="bps-n">24h</span>
-          <span class="bps-l">Operativo</span>
-        </div>
-      </div>
-
-      <ul class="bp-features">
-        <li><i class="pi pi-map-marker"></i><span>Trazabilidad completa de la flota</span></li>
-        <li><i class="pi pi-box"></i><span>Órdenes de carga generadas automáticamente</span></li>
-        <li><i class="pi pi-chart-bar"></i><span>Dashboard y KPIs en tiempo real</span></li>
-        <li><i class="pi pi-shield"></i><span>Control de acceso por roles operativos</span></li>
-      </ul>
+  <!-- Foto de patio: marca + reloj real del turno -->
+  <section class="yard" aria-hidden="true">
+    <div class="yard-top">
+      <span class="yard-site">CD Babel · Huachipa</span>
+      <span class="yard-clock">
+        <strong>{{ clock() }}</strong>
+        <span>{{ date() }} · {{ shift() }}</span>
+      </span>
     </div>
 
-    <p class="bp-footer">© 2026 Grupo Malvina · Lima, Perú · Gestión de Flota</p>
-  </div>
+    <div class="yard-brand">
+      <span class="yard-kicker">Control de carga y despacho</span>
+      <h1 class="yard-name">Grupo<br>Malvina</h1>
+    </div>
+  </section>
 
-  <!-- ── Right: form panel ────────────────────────────────── -->
-  <div class="form-panel">
-    <div class="form-card">
+  <!-- Formulario -->
+  <section class="desk">
+    <div class="desk-inner">
+      <header class="desk-head">
+        <h2>Ingreso de personal</h2>
+        <p>Usa tu DNI y la contraseña que te asignó el área de sistemas.</p>
+      </header>
 
-      <span class="fc-badge">ACCESO AL SISTEMA</span>
+      <form (ngSubmit)="onSubmit()" class="desk-form" autocomplete="on" novalidate>
+        <label class="field">
+          <span class="field-label">DNI</span>
+          <input class="field-input field-input--mono"
+                 [ngModel]="dni()" (ngModelChange)="onDni($event)"
+                 name="dni" autocomplete="username" inputmode="numeric"
+                 pattern="\d{8}" maxlength="8" placeholder="8 dígitos"
+                 [attr.aria-invalid]="!!error() && !dniValid()" />
+        </label>
 
-      <div class="fc-header">
-        <div class="fc-mobile-logo">
-          <i class="pi pi-truck"></i>
-          <span>Grupo Malvina</span>
-        </div>
-        <h2>Bienvenido</h2>
-        <p>Ingresa tus credenciales para acceder al panel de control</p>
-      </div>
-
-      <form (ngSubmit)="onSubmit()" class="fc-form" autocomplete="on">
-
-        <!-- DNI -->
-        <div class="fc-field">
-          <label for="dni">Número de DNI</label>
-          <p-iconfield class="w-full">
-            <p-inputicon styleClass="pi pi-id-card" />
-            <input id="dni" pInputText
-                   [ngModel]="dni()" (ngModelChange)="dni.set($event)"
-                   name="dni" placeholder="00000000" class="w-full"
-                   autocomplete="username" maxlength="8" />
-          </p-iconfield>
-        </div>
-
-        <!-- Password with show/hide toggle -->
-        <div class="fc-field">
-          <label for="pass">Contraseña</label>
-          <div class="fc-pass-wrapper">
-            <i class="pi pi-lock fc-pass-icon"></i>
-            <input [type]="showPassword() ? 'text' : 'password'" pInputText
-                   id="pass"
+        <label class="field">
+          <span class="field-label">Contraseña</span>
+          <span class="field-pass">
+            <input class="field-input"
+                   [type]="showPassword() ? 'text' : 'password'"
                    [ngModel]="password()" (ngModelChange)="password.set($event)"
-                   name="password" placeholder="••••••••"
-                   class="w-full" autocomplete="current-password" />
-            <button type="button" class="fc-pass-toggle"
-                    (click)="togglePassword()"
-                    [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
-              <i [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                   name="password" autocomplete="current-password" />
+            <button type="button" class="field-reveal" (click)="togglePassword()"
+                    [attr.aria-pressed]="showPassword()">
+              {{ showPassword() ? 'Ocultar' : 'Ver' }}
             </button>
-          </div>
-        </div>
+          </span>
+        </label>
 
-        <!-- Remember me + Forgot password -->
-        <div class="fc-row-inline">
-          <label class="fc-checkbox-label" for="remember">
-            <p-checkbox [ngModel]="rememberMe()" (ngModelChange)="rememberMe.set($event)"
-                        [binary]="true" inputId="remember" name="remember" />
-            <span>Recordarme</span>
-          </label>
-          <a href="#" class="fc-forgot" (click)="$event.preventDefault()">
-            ¿Olvidaste tu contraseña?
-          </a>
-        </div>
+        <label class="remember">
+          <input type="checkbox" [ngModel]="rememberMe()" (ngModelChange)="rememberMe.set($event)" name="remember" />
+          <span>Recordar mi DNI en este equipo</span>
+        </label>
 
         @if (error()) {
-          <div class="fc-error" role="alert">
-            <i class="pi pi-exclamation-triangle"></i>
-            <span>{{ error() }}</span>
-          </div>
+          <p class="alert" role="alert">{{ error() }}</p>
         }
 
-        <p-button type="submit" label="Ingresar al sistema"
-                  icon="pi pi-arrow-right" iconPos="right"
-                  styleClass="w-full" [loading]="loading()" />
-
+        <button type="submit" class="submit" [disabled]="loading()">
+          @if (loading()) {
+            <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Verificando…
+          } @else {
+            Ingresar
+          }
+        </button>
       </form>
 
-      <div class="fc-footer-row">
-        <div class="fc-security">
-          <i class="pi pi-shield"></i>
-          <span>Sesión cifrada · Acceso por roles</span>
-        </div>
-        <p class="fc-help">
-          ¿Problemas? <a href="#" (click)="$event.preventDefault()">Contactar administrador</a>
-        </p>
-      </div>
-
+      <footer class="desk-foot">
+        <p>¿Sin acceso? Solicita tu alta a tu supervisor.</p>
+        <p class="desk-legal">© {{ now().getFullYear() }} Grupo Malvina · Lima, Perú</p>
+      </footer>
     </div>
-  </div>
+  </section>
 
-</div>
+</main>

@@ -21,7 +21,7 @@ class JwtAuthFilterTest {
     private JwtAuthFilter filter() {
         JwtProperties p = new JwtProperties();
         p.setSecret(SECRET);
-        return new JwtAuthFilter(p);
+        return new JwtAuthFilter(p, "k");
     }
 
     private String token(String employeeId, String role) {
@@ -45,6 +45,35 @@ class JwtAuthFilterTest {
         assertThat(res.getStatus()).isEqualTo(200);
         assertThat(((HttpServletRequest) chain.getRequest()).getHeader("X-Employee-Id")).isEqualTo("42");
         assertThat(((HttpServletRequest) chain.getRequest()).getHeader("X-Employee-Role")).isEqualTo("ADM");
+        assertThat(((HttpServletRequest) chain.getRequest()).getHeader("X-Internal-Key")).isEqualTo("k");
+    }
+
+    @Test
+    void clientSpoofedHeaders_areOverwrittenOrHidden() throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest("GET", "/api/vehicles");
+        req.setRequestURI("/api/vehicles");
+        req.addHeader("Authorization", "Bearer " + token("7", "DRV"));
+        req.addHeader("X-Employee-Role", "ADM");
+        req.addHeader("X-Internal-Key", "fake");
+        MockFilterChain chain = new MockFilterChain();
+
+        filter().doFilter(req, new MockHttpServletResponse(), chain);
+
+        HttpServletRequest fwd = (HttpServletRequest) chain.getRequest();
+        assertThat(fwd.getHeader("X-Employee-Role")).isEqualTo("DRV");
+        assertThat(fwd.getHeader("X-Internal-Key")).isEqualTo("k");
+    }
+
+    @Test
+    void internalOnlyPath_returns404() throws Exception {
+        MockHttpServletRequest req = new MockHttpServletRequest("GET", "/api/employees/auth/by-dni/00000001");
+        req.setRequestURI("/api/employees/auth/by-dni/00000001");
+        req.addHeader("Authorization", "Bearer " + token("1", "ADM"));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        filter().doFilter(req, res, new MockFilterChain());
+
+        assertThat(res.getStatus()).isEqualTo(404);
     }
 
     @Test

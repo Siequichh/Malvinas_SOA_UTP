@@ -8,6 +8,8 @@ import com.malvinas.vehiculos.domain.repository.*;
 import com.malvinas.vehiculos.domain.service.VehicleService;
 import com.malvinas.vehiculos.infrastructure.exception.*;
 import com.malvinas.vehiculos.infrastructure.mapper.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -79,10 +81,20 @@ public class VehicleServiceImpl implements VehicleService {
             throw new BusinessException("Cannot transition from " + current.getDisplayName() + " to " + next.getDisplayName());
         StatusHistory h = new StatusHistory();
         h.setVehicle(v); h.setPreviousStatus(current.getCode());
-        h.setNewStatus(next.getCode()); h.setReason(req.reason()); h.setEmployeeId(req.employeeId());
+        h.setNewStatus(next.getCode()); h.setReason(req.reason()); h.setEmployeeId(currentEmployeeId());
         historyRepo.save(h);
         v.setStatus(next);
         return vehicleMapper.toResponse(vehicleRepo.save(v));
+    }
+
+    /**
+     * Actor del cambio = empleado autenticado (X-Employee-Id que pone el gateway o que propaga el servicio
+     * llamante). Antes se tomaba del body y cualquiera podia registrar otro ID.
+     */
+    private static Long currentEmployeeId() {
+        Authentication a = SecurityContextHolder.getContext().getAuthentication();
+        if (a == null || a.getName() == null) return null;
+        try { return Long.valueOf(a.getName()); } catch (NumberFormatException e) { return null; }
     }
 
     @Override @Transactional(readOnly = true)

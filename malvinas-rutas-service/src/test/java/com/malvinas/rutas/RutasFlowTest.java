@@ -5,7 +5,7 @@ import com.malvinas.rutas.infrastructure.client.PersonalServiceClient;
 import com.malvinas.rutas.infrastructure.client.VehiculosServiceClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -38,6 +38,7 @@ class RutasFlowTest {
         String response = mvc.perform(post("/api/dispatches")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"vehiclePlate\":\"TST-001\",\"driverId\":" + DRIVER_ID + "}")
+                .header("X-Internal-Key", "dev-internal-key")
                 .header("X-Employee-Id", "3")
                 .header("X-Employee-Role", "SUP"))
            .andExpect(status().isCreated())
@@ -46,6 +47,7 @@ class RutasFlowTest {
         long id = ((Number) JsonPath.read(response, "$.id")).longValue();
 
         mvc.perform(post("/api/dispatches/" + id + "/accept")
+                .header("X-Internal-Key", "dev-internal-key")
                 .header("X-Employee-Id", String.valueOf(DRIVER_ID))
                 .header("X-Employee-Role", "DRV"))
            .andExpect(status().isOk());
