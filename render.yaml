@@ -63,6 +63,11 @@ services:
         value: 10000
       - key: EUREKA_URI
         value: https://malvinas-eureka.onrender.com
+      - key: INTERNAL_KEY
+        fromService:
+          type: web
+          name: malvinas-api-gateway
+          envVarKey: INTERNAL_KEY
       - key: JWT_SECRET
         sync: false  # establecer manualmente en el dashboard de Render
       - key: POSTGRESQL_HOST
@@ -100,6 +105,11 @@ services:
         value: 10000
       - key: EUREKA_URI
         value: https://malvinas-eureka.onrender.com
+      - key: INTERNAL_KEY
+        fromService:
+          type: web
+          name: malvinas-api-gateway
+          envVarKey: INTERNAL_KEY
       - key: JWT_SECRET
         sync: false  # MISMO valor que personal-service y api-gateway
 
@@ -123,6 +133,9 @@ services:
         value: 10000
       - key: EUREKA_URI
         value: https://malvinas-eureka.onrender.com
+      # Secreto compartido gateway <-> servicios (lo genera Render; no se copia a mano)
+      - key: INTERNAL_KEY
+        generateValue: true
       - key: JWT_SECRET
         sync: false  # MISMO valor que personal-service y auth-service
 
@@ -144,6 +157,11 @@ services:
         value: 10000
       - key: EUREKA_URI
         value: https://malvinas-eureka.onrender.com
+      - key: INTERNAL_KEY
+        fromService:
+          type: web
+          name: malvinas-api-gateway
+          envVarKey: INTERNAL_KEY
       - key: POSTGRESQL_HOST
         fromDatabase:
           name: malvinas-db
@@ -179,6 +197,11 @@ services:
         value: 10000
       - key: EUREKA_URI
         value: https://malvinas-eureka.onrender.com
+      - key: INTERNAL_KEY
+        fromService:
+          type: web
+          name: malvinas-api-gateway
+          envVarKey: INTERNAL_KEY
       - key: POSTGRESQL_HOST
         fromDatabase:
           name: malvinas-db
@@ -214,6 +237,11 @@ services:
         value: 10000
       - key: EUREKA_URI
         value: https://malvinas-eureka.onrender.com
+      - key: INTERNAL_KEY
+        fromService:
+          type: web
+          name: malvinas-api-gateway
+          envVarKey: INTERNAL_KEY
       - key: POSTGRESQL_HOST
         fromDatabase:
           name: malvinas-db
@@ -249,6 +277,11 @@ services:
         value: 10000
       - key: EUREKA_URI
         value: https://malvinas-eureka.onrender.com
+      - key: INTERNAL_KEY
+        fromService:
+          type: web
+          name: malvinas-api-gateway
+          envVarKey: INTERNAL_KEY
 
   # ---------------------------------------------------------------------------
   # 9. Frontend Angular — Static Site

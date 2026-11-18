@@ -48,8 +48,17 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeAuthResponse findAuthInfoByDni(String dni) {
-        Employee emp = employeeRepo.findByDni(dni)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado con DNI: " + dni));
+        return toAuth(employeeRepo.findByDni(dni)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado con DNI: " + dni)));
+    }
+
+    @Override
+    public EmployeeAuthResponse findAuthInfoById(Integer id) {
+        return toAuth(employeeRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado con ID: " + id)));
+    }
+
+    private EmployeeAuthResponse toAuth(Employee emp) {
         return new EmployeeAuthResponse(
                 emp.getId(),
                 emp.getDni(),

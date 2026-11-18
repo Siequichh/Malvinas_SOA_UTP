@@ -52,6 +52,12 @@ public class EmployeeController {
         return ResponseEntity.ok(service.findAuthInfoByDni(dni));
     }
 
+    @GetMapping("/auth/by-id/{id}")
+    @Operation(summary = "Obtener info de autenticacion por ID (uso interno de auth-service, refresh)")
+    public ResponseEntity<EmployeeAuthResponse> findAuthInfoById(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.findAuthInfoById(id));
+    }
+
     @GetMapping("/role/{roleCode}")
     @Operation(summary = "Listar empleados por rol")
     public ResponseEntity<List<EmployeeResponse>> findByRole(@PathVariable String roleCode) {

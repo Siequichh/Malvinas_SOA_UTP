@@ -35,9 +35,9 @@ public class SecurityConfig {
                     "/swagger-ui/**", "/swagger-ui.html",
                     "/v3/api-docs/**", "/api-docs/**"
                 ).permitAll()
-                // Endpoints internos consumidos por auth-service (sin JWT)
-                .requestMatchers(HttpMethod.GET, "/api/employees/by-dni/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/employees/auth/by-dni/**").permitAll()
+                // Endpoints internos consumidos por auth-service/rutas-service. Protegidos por InternalKeyFilter
+                // y bloqueados en el gateway (404), asi que solo los alcanzan otros servicios.
+                .requestMatchers(HttpMethod.GET, "/api/employees/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/employees/*/active").permitAll()
                 // Lectura de roles: cualquier empleado autenticado
                 .requestMatchers(HttpMethod.GET, "/api/roles/**").hasAnyRole("ADM", "SUP", "MOV", "DRV", "SEC")

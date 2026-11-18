@@ -10,6 +10,7 @@ public interface EmployeeService {
     EmployeeResponse findById(Integer id);
     EmployeeResponse findByDni(String dni);
     EmployeeAuthResponse findAuthInfoByDni(String dni);
+    EmployeeAuthResponse findAuthInfoById(Integer id);
     List<EmployeeResponse> findByRole(String roleCode);
     EmployeeResponse create(EmployeeRequest request);
     EmployeeResponse update(Integer id, EmployeeRequest request);

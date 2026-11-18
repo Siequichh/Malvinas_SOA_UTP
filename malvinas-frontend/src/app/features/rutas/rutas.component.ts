@@ -55,6 +55,8 @@ export class RutasComponent implements OnInit, OnDestroy {
   scanDialogVisible = signal(false);
   scannedOC = signal<string | null>(null);
   scannedResult = signal<{ valid: boolean; message: string } | null>(null);
+  scanError = signal<string | null>(null);
+  manualOC = signal('');
   qrDownloadUrl = signal<SafeUrl | null>(null);
   form = signal<any>({ vehiclePlate: '', driverId: null, scheduledDepartureTime: '', remarks: '', deliveryPointIds: [] });
   departureTime = signal<Date | null>(null);
@@ -395,34 +397,59 @@ export class RutasComponent implements OnInit, OnDestroy {
   openScanDialog() {
     this.scannedOC.set(null);
     this.scannedResult.set(null);
+    this.scanError.set(null);
+    this.manualOC.set('');
     this.scanDialogVisible.set(true);
     setTimeout(() => this.startCamera(), 300);
   }
 
+  /**
+   * Valida la OC contra datos FRESCOS del backend. Antes se comparaba con la lista cargada al abrir
+   * la pantalla: si el conductor aceptaba despues, el SEC veia "OC no encontrada" (fallo en la exposicion).
+   */
+  verifyOC(raw: string) {
+    const code = (raw ?? '').trim().toUpperCase();
+    if (!code) return;
+    this.scannedOC.set(code);
+    this.scannedResult.set({ valid: false, message: 'Verificando…' });
+    this.dispatchService.getDispatches().subscribe({
+      next: (list: any[]) => {
+        const d = list.find(x => (x.loadingOrderCode ?? '').toUpperCase() === code);
+        this.scannedResult.set(
+          !d                     ? { valid: false, message: 'OC no registrada' } :
+          d.statusCode === '02'  ? { valid: true,  message: `OC válida — Vehículo ${d.vehiclePlate}` } :
+                                   { valid: false, message: `OC registrada, pero el despacho está ${this.getStatusLabel(d.statusCode)}` });
+      },
+      error: (e) => this.scannedResult.set({ valid: false, message: parseApiError(e) })
+    });
+  }
+
   private async startCamera() {
-    const { Html5Qrcode } = await import('html5-qrcode');
-    const onSuccess = (code: string) => {
-      this.scannedOC.set(code);
-      const match = this.dispatches().find((d: any) => d.loadingOrderCode === code && d.statusCode === '02');
-      this.scannedResult.set(match
-        ? { valid: true, message: `OC válida — Vehículo ${match.vehiclePlate}` }
-        : { valid: false, message: 'OC no encontrada o vehículo no está EN RUTA' });
-      this.stopCamera();
+    const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
+    const config = {
+      fps: 10,
+      // Recuadro relativo al visor: un qrbox fijo de 250px no cabia en el dialogo de 360px en celulares
+      qrbox: (w: number, h: number) => { const s = Math.floor(Math.min(w, h) * 0.7); return { width: s, height: s }; },
+      aspectRatio: 1
+    };
+    const onSuccess = (code: string) => { this.stopCamera(); this.verifyOC(code); };
+    const start = async (camera: string | MediaTrackConstraints) => {
+      this.html5QrCode = new Html5Qrcode('qr-reader', { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE], verbose: false });
+      await this.html5QrCode.start(camera, config, onSuccess, () => {});
     };
     try {
-      this.html5QrCode = new Html5Qrcode('qr-reader');
-      await this.html5QrCode.start({ facingMode: 'environment' }, { fps: 15, qrbox: { width: 250, height: 250 } }, onSuccess, () => {});
+      await start({ facingMode: 'environment' });
     } catch {
-      // facingMode constraint failed — stop partial init and try by camera ID
       try { await this.html5QrCode?.stop(); } catch {}
       this.html5QrCode = null;
       try {
         const cameras = await Html5Qrcode.getCameras();
-        if (cameras?.length) {
-          this.html5QrCode = new Html5Qrcode('qr-reader');
-          await this.html5QrCode.start(cameras[cameras.length - 1].id, { fps: 15, qrbox: { width: 250, height: 250 } }, onSuccess, () => {});
-        }
-      } catch { /* camera not available */ }
+        if (!cameras?.length) throw new Error('sin cámaras');
+        await start(cameras[cameras.length - 1].id);
+      } catch {
+        this.html5QrCode = null;
+        this.scanError.set('No se pudo abrir la cámara. Revisa el permiso del navegador o ingresa el código a mano.');
+      }
     }
   }
 

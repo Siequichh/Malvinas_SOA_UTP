@@ -55,3 +55,6 @@ exposicion/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ── Documentos de auditoria (curso, no versionar) ─────────────────────────
+auditoria/

@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 public record EmployeeRequest(
     @NotBlank(message = "DNI es requerido")
-    @Size(min = 8, max = 8, message = "DNI debe tener 8 digitos")
+    @Pattern(regexp = "\\d{8}", message = "DNI debe tener 8 digitos numericos")
     String dni,
 
     @NotBlank(message = "Nombre es requerido")

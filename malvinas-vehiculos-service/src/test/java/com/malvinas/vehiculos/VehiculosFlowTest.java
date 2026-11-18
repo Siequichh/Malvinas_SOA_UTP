@@ -4,7 +4,7 @@ import com.malvinas.vehiculos.domain.entity.VehicleType;
 import com.malvinas.vehiculos.domain.repository.VehicleTypeRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -37,6 +37,7 @@ class VehiculosFlowTest {
         mvc.perform(post("/api/vehicles")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createBody)
+                .header("X-Internal-Key", "dev-internal-key")
                 .header("X-Employee-Id", "1")
                 .header("X-Employee-Role", "ADM"))
            .andExpect(status().isCreated());
@@ -44,6 +45,7 @@ class VehiculosFlowTest {
         mvc.perform(put("/api/vehicles/" + plate + "/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"newStatusCode\":\"02\",\"reason\":\"test\"}")
+                .header("X-Internal-Key", "dev-internal-key")
                 .header("X-Employee-Id", "1")
                 .header("X-Employee-Role", "ADM"))
            .andExpect(status().isOk());

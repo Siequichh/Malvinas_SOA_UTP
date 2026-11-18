@@ -146,6 +146,23 @@
   margin: 0;
 }
 
+.scan-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--p-red-500, #ef4444);
+  text-align: center;
+}
+
+.scan-manual {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--p-content-border-color);
+
+  input { flex: 1; min-width: 0; text-transform: uppercase; }
+}
+
 /* Status filter select */
 :host ::ng-deep .status-filter {
   min-width: 170px;

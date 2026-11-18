@@ -1,5 +1,6 @@
 package com.malvinas.cargas.application.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -9,5 +10,5 @@ public record LoadRequest(
     @NotNull Long mobilizerId,
     String remarks,
     String loadingPlant,
-    List<LoadDetailRequest> details
+    @Valid List<LoadDetailRequest> details
 ) {}

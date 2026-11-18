@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -27,12 +28,17 @@ public class GlobalExceptionHandler {
                 new ErrorResponse(400, "Bad Request", message, LocalDateTime.now()));
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleStatus(ResponseStatusException ex) {
+        HttpStatus s = HttpStatus.valueOf(ex.getStatusCode().value());
+        return ResponseEntity.status(s).body(
+                new ErrorResponse(s.value(), s.getReasonPhrase(), ex.getReason(), LocalDateTime.now()));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex) {
-        HttpStatus s = ex.getMessage() != null && ex.getMessage().contains("Invalid")
-                ? HttpStatus.UNAUTHORIZED : HttpStatus.BAD_REQUEST;
-        return ResponseEntity.status(s).body(
-                new ErrorResponse(s.value(), s.getReasonPhrase(), ex.getMessage(), LocalDateTime.now()));
+        return ResponseEntity.badRequest().body(
+                new ErrorResponse(400, "Bad Request", ex.getMessage(), LocalDateTime.now()));
     }
 
     @ExceptionHandler(Exception.class)
